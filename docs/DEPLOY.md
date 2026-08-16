@@ -65,9 +65,19 @@ de fotos.
 
 1. **R2** → *Create bucket* → nome `lixo-na-rua-fotos`
 2. **Manage R2 API Tokens** → *Create API Token*
-   - Permissão: **Object Read & Write**
+   - Permissão: **Object Read & Write** — nunca Admin. Admin permite
+     excluir buckets inteiros; o backend só precisa gravar objetos.
    - Restrinja ao bucket criado
    - Guarde `Access Key ID` e `Secret Access Key` — o segredo só aparece uma vez
+
+> **Crie o token no momento em que for preencher o `.env.prod`**, não antes.
+> Assim o valor vai da tela direto para o arquivo, sem passar por print,
+> mensagem ou área de transferência esquecida.
+>
+> Segredo que aparece em captura de tela deve ser considerado exposto e
+> rotacionado — mesmo que a captura pareça ter ficado só com você. A
+> alternativa é confiar que ninguém mais verá aquele arquivo, e isso não é
+> uma garantia que se possa dar.
 3. No bucket → **Settings** → **S3 API**: copie o endpoint
    (`https://<account-id>.r2.cloudflarestorage.com`)
 4. Ainda em Settings → **Public access** → *Connect domain* →
