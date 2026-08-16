@@ -1,0 +1,246 @@
+/* ---------- layout ---------- */
+
+.auth-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+}
+
+.app-wrap {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 16px 64px;
+}
+
+.carregando {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #e2e8f0;
+}
+
+.topo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  color: #f8fafc;
+}
+
+.topo h1 {
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+.topo .subtitle {
+  margin: 4px 0 0;
+  color: #cbd5e1;
+}
+
+/* ---------- cartões ---------- */
+
+.card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+  margin-bottom: 18px;
+}
+
+.auth-card {
+  max-width: 420px;
+  width: 100%;
+  margin: 0;
+}
+
+.card h1 {
+  margin: 0;
+  font-size: 1.9rem;
+  color: #0f172a;
+}
+
+.card h2 {
+  margin: 0 0 14px;
+  font-size: 1.05rem;
+  color: #0f172a;
+}
+
+.subtitle {
+  margin: 6px 0 22px;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+/* ---------- formulário ---------- */
+
+.campo {
+  display: block;
+  margin-bottom: 16px;
+}
+
+.campo span {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.campo input {
+  width: 100%;
+  padding: 11px 13px;
+  font-size: 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  color: #0f172a;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.campo input:focus {
+  outline: none;
+  border-color: #1d4ed8;
+  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15);
+}
+
+.erro {
+  display: block;
+  margin-top: 5px;
+  color: #dc2626;
+  font-size: 0.82rem;
+}
+
+.alerta {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  padding: 11px 13px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+}
+
+/* ---------- botões ---------- */
+
+.btn {
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  background: #1d4ed8;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn:hover:not(:disabled) {
+  background: #1e40af;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secundario {
+  width: auto;
+  padding: 9px 18px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  font-size: 0.9rem;
+}
+
+.btn-secundario:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #1d4ed8;
+  font-weight: 600;
+  font-size: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.alternar {
+  margin: 18px 0 0;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+/* ---------- listas e dados ---------- */
+
+.lista-status {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lista-status li {
+  padding: 7px 0;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  flex-shrink: 0;
+}
+
+.dot.ok {
+  background: #16a34a;
+}
+.dot.error {
+  background: #dc2626;
+}
+.dot.checking {
+  background: #f59e0b;
+}
+
+.dados {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px 20px;
+  margin: 0;
+}
+
+.dados dt {
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.dados dd {
+  margin: 0;
+  color: #0f172a;
+  font-weight: 500;
+}
+
+/* ---------- responsivo ---------- */
+
+@media (max-width: 600px) {
+  .card {
+    padding: 22px;
+  }
+  .card h1,
+  .topo h1 {
+    font-size: 1.5rem;
+  }
+  .topo {
+    flex-direction: column;
+  }
+}

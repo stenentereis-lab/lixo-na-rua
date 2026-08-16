@@ -1,0 +1,158 @@
+/**
+ * Cliente HTTP da API.
+ *
+ * O endereço do backend é descoberto automaticamente: no celular,
+ * "localhost" aponta para o próprio aparelho, não para o seu PC. O Expo
+ * expõe o IP da máquina de desenvolvimento em `hostUri` (ex.:
+ * "192.168.0.10:8081"), e reaproveitamos esse IP trocando a porta para
+ * a do backend.
+ *
+ * Isso dispensa configurar IP na mão — que é o erro mais comum ao rodar
+ * app Expo com backend local.
+ */
+import Constants from 'expo-constants';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const PORTA_BACKEND = 3000;
+const TOKEN_KEY = 'lixo_na_rua_token';
+
+/** IP de rede local: 192.168.x.x, 10.x.x.x ou 172.16-31.x.x */
+const IP_LOCAL = /^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/;
+
+/**
+ * Descobre a URL do backend.
+ *
+ * Ordem: configuração explícita → IP detectado pelo Expo → localhost.
+ *
+ * @returns {string} ex.: "http://192.168.0.10:3000"
+ */
+function descobrirApiUrl() {
+  // 1. Configuração explícita em app.json > extra.apiUrl.
+  //    Necessária quando o Expo roda em modo túnel (o host vira um
+  //    endereço .exp.direct, que não serve para achar o backend) ou
+  //    quando o backend está em outra máquina.
+  const configurada = Constants.expoConfig?.extra?.apiUrl;
+  if (configurada) return configurada;
+
+  // 2. IP da máquina do Metro, que normalmente é onde o backend roda.
+  const hostUri =
+    Constants.expoConfig?.hostUri || Constants.manifest?.debuggerHost || '';
+  const host = hostUri.split(':')[0];
+
+  if (IP_LOCAL.test(host)) return `http://${host}:${PORTA_BACKEND}`;
+
+  // 3. Sobrou localhost — só funciona em emulador rodando na própria
+  //    máquina. Num celular físico, "localhost" é o próprio aparelho.
+  //    Acontece quando o Expo não detecta a rede (mostra 127.0.0.1) ou
+  //    em modo túnel: nos dois casos, defina extra.apiUrl no app.json.
+  return `http://localhost:${PORTA_BACKEND}`;
+}
+
+/**
+ * Indica se o endereço detectado tem chance de funcionar num celular
+ * físico. A tela de login usa isso para avisar antes de o usuário
+ * tentar entrar e receber um erro de rede sem explicação.
+ */
+export const apiUrlSuspeita = () => !IP_LOCAL.test(descobrirApiUrl());
+
+export const API_URL = descobrirApiUrl();
+
+export const tokenStorage = {
+  get: () => AsyncStorage.getItem(TOKEN_KEY),
+  set: (token) => AsyncStorage.setItem(TOKEN_KEY, token),
+  clear: () => AsyncStorage.removeItem(TOKEN_KEY),
+};
+
+/** Erro da API, já com status e detalhes por campo. */
+export class ApiError extends Error {
+  constructor(message, status, details) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.details = details || {};
+  }
+}
+
+/**
+ * Faz uma requisição à API.
+ *
+ * @param {string} path
+ * @param {object} [options]
+ * @param {string} [options.method='GET']
+ * @param {object} [options.body]
+ * @param {FormData} [options.formData] - para upload de arquivo
+ * @param {boolean} [options.auth=false]
+ * @returns {Promise<object>}
+ * @throws {ApiError}
+ */
+async function request(path, { method = 'GET', body, formData, auth = false } = {}) {
+  const headers = {};
+
+  if (body) headers['Content-Type'] = 'application/json';
+  // Com FormData o header Content-Type NÃO deve ser definido: o fetch
+  // precisa gerar o boundary do multipart sozinho.
+
+  if (auth) {
+    const token = await tokenStorage.get();
+    if (token) headers.Authorization = `Bearer ${token}`;
+  }
+
+  let response;
+  try {
+    response = await fetch(`${API_URL}${path}`, {
+      method,
+      headers,
+      body: formData || (body ? JSON.stringify(body) : undefined),
+    });
+  } catch {
+    throw new ApiError(
+      `Não consegui falar com o servidor em ${API_URL}. ` +
+        'Verifique se o backend está rodando e se o celular está no mesmo Wi-Fi.',
+      0
+    );
+  }
+
+  const isJson = response.headers.get('content-type')?.includes('application/json');
+  const data = isJson ? await response.json() : null;
+
+  if (!response.ok) {
+    throw new ApiError(
+      data?.error || `Erro ${response.status}`,
+      response.status,
+      data?.details
+    );
+  }
+
+  return data;
+}
+
+export const api = {
+  health: () => request('/health'),
+
+  register: (dados) => request('/auth/register', { method: 'POST', body: dados }),
+
+  login: (credenciais) => request('/auth/login', { method: 'POST', body: credenciais }),
+
+  me: () => request('/auth/me', { auth: true }),
+
+  /**
+   * Envia a foto e devolve a URL.
+   * @param {string} uri - caminho local do arquivo (file://...)
+   */
+  uploadFoto: (uri) => {
+    const formData = new FormData();
+    const nome = uri.split('/').pop() || 'foto.jpg';
+    const ext = nome.split('.').pop()?.toLowerCase();
+    const tipo = ext === 'png' ? 'image/png' : 'image/jpeg';
+
+    formData.append('image', { uri, name: nome, type: tipo });
+
+    return request('/uploads', { method: 'POST', formData, auth: true });
+  },
+
+  criarDenuncia: (dados) =>
+    request('/complaints', { method: 'POST', body: dados, auth: true }),
+
+  listarDenuncias: (params = '') =>
+    request(`/complaints${params}`, { auth: true }),
+};

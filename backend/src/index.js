@@ -1,59 +1,46 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const { Pool } = require('pg');
+/**
+ * Ponto de entrada do servidor.
+ *
+ * A construção do app fica em app.js; aqui só sobe a porta e cuida do
+ * encerramento limpo.
+ */
+const app = require('./app');
+const config = require('./config');
+const db = require('./db');
 
-const app = express();
+const server = app.listen(config.port, async () => {
+  console.log(`✅ Server running on http://localhost:${config.port}`);
 
-// ============ MIDDLEWARE ============
-app.use(helmet());
-app.use(cors({
-  origin: process.env.CORS_ORIGIN?.split(',') || '*'
-}));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// ============ DATABASE ============
-const pool = new Pool({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  database: process.env.DB_NAME,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
+  const dbOk = await db.isHealthy();
+  if (dbOk) {
+    console.log('✅ Database connected');
+  } else {
+    console.error('❌ Database indisponível.');
+    console.error('   O Postgres está rodando? cd C:\\lixo-na-rua && docker compose up -d postgres');
+    console.error('   Depois digite "rs" aqui para reiniciar.');
+  }
 });
 
-// ============ ROUTES ============
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    timestamp: new Date(),
-    app: 'Lixo na Rua API v1.0'
+/**
+ * Encerramento limpo: para de aceitar conexões novas, termina as em
+ * andamento e só então fecha o pool do banco.
+ */
+function shutdown(signal) {
+  console.log(`\n${signal} recebido, encerrando...`);
+  server.close(async () => {
+    await db.pool.end();
+    console.log('Encerrado.');
+    process.exit(0);
   });
-});
 
-// ============ ERROR HANDLER ============
-app.use((err, req, res, next) => {
-  console.error(err);
-  res.status(err.status || 500).json({
-    error: err.message || 'Internal Server Error'
-  });
-});
+  // Se algo travar, não fica pendurado para sempre.
+  setTimeout(() => {
+    console.error('Encerramento forçado após timeout.');
+    process.exit(1);
+  }, 10_000).unref();
+}
 
-app.use((req, res) => {
-  res.status(404).json({ error: 'Not Found' });
-});
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
 
-// ============ START SERVER ============
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
-  
-  // Test database connection
-  pool.query('SELECT NOW()', (err, res) => {
-    if (err) console.error('❌ Database error:', err.message);
-    else console.log('✅ Database connected');
-  });
-});
-
-module.exports = { app, pool };
+module.exports = server;

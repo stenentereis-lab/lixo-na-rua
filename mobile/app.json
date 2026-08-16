@@ -4,36 +4,35 @@
     "slug": "lixo-na-rua",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#1e3a8a"
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTabletMode": true,
-      "bundleIdentifier": "com.lixonarua.app"
+      "supportsTablet": true,
+      "bundleIdentifier": "com.lixonarua.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "O Lixo na Rua usa a câmera para você fotografar o lixo que quer denunciar.",
+        "NSLocationWhenInUseUsageDescription": "A localização marca no mapa onde o lixo foi encontrado."
+      }
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "package": "com.lixonarua.app"
+      "package": "com.lixonarua.app",
+      "permissions": ["CAMERA", "ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
     },
     "plugins": [
       [
         "expo-camera",
         {
-          "cameraPermission": "Lixo na Rua precisa de acesso à câmera"
+          "cameraPermission": "O Lixo na Rua usa a câmera para você fotografar o lixo que quer denunciar."
         }
       ],
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Lixo na Rua precisa de acesso à localização"
+          "locationWhenInUsePermission": "A localização marca no mapa onde o lixo foi encontrado."
         }
       ]
     ]

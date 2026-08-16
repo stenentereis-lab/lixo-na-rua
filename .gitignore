@@ -1,8 +1,11 @@
 node_modules/
 npm-debug.log*
 yarn-debug.log*
-package-lock.json
-yarn.lock
+
+# Lockfiles SAO versionados de proposito: garantem que todo mundo
+# instale exatamente a mesma arvore de dependencias.
+# Ver docs/DECISOES.md #007
+
 .env
 .env.local
 .env.*.local
@@ -15,6 +18,9 @@ Thumbs.db
 *~
 dist/
 build/
+
+# Fotos enviadas pelos usuarios (armazenamento local do MVP)
+backend/uploads/
 .expo/
 *.apk
 *.ipa
