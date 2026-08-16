@@ -28,6 +28,24 @@
 dentro para fora, então o firewall do VPS pode ficar fechado, com só o SSH
 entrando. Isso elimina a maior superfície de ataque de um servidor exposto.
 
+## Endereços
+
+O projeto vive em subdomínios de um domínio já existente. O site atual
+continua intocado.
+
+| Endereço                          | Serviço            |
+| --------------------------------- | ------------------ |
+| `brconsultorias.com`              | site atual, intocado |
+| `lixonarua.brconsultorias.com`    | web (Pages)        |
+| `api-lixo.brconsultorias.com`     | backend (Tunnel)   |
+| `fotos-lixo.brconsultorias.com`   | fotos (R2)         |
+
+> ⚠️ **Um nível de subdomínio, sempre.** O certificado SSL gratuito da
+> Cloudflare cobre o domínio e `*.brconsultorias.com`, mas **não** cobre
+> dois níveis. `api.lixonarua.brconsultorias.com` daria erro de certificado
+> no navegador, e corrigir exigiria o Advanced Certificate Manager, que é
+> pago. Por isso `api-lixo` e não `api.lixonarua`.
+
 ## Custo estimado
 
 | Item              | Serviço            | Custo                    |
@@ -53,7 +71,7 @@ de fotos.
 3. No bucket → **Settings** → **S3 API**: copie o endpoint
    (`https://<account-id>.r2.cloudflarestorage.com`)
 4. Ainda em Settings → **Public access** → *Connect domain* →
-   `fotos.seudominio.org`
+   `fotos-lixo.brconsultorias.com`
 
 Preencha no `.env.prod`:
 
@@ -64,7 +82,7 @@ S3_REGION=auto
 S3_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
 S3_ACCESS_KEY_ID=...
 S3_SECRET_ACCESS_KEY=...
-S3_PUBLIC_URL=https://fotos.seudominio.org
+S3_PUBLIC_URL=https://fotos-lixo.brconsultorias.com
 ```
 
 > `S3_REGION=auto` é exigência do R2. O `S3_PUBLIC_URL` precisa do domínio
@@ -136,11 +154,11 @@ Trocar o segredo invalida as sessões existentes: todo mundo faz login de novo.
 3. Copie o **token** e coloque em `CLOUDFLARE_TUNNEL_TOKEN` no `.env.prod`
 4. Em **Public Hostnames**, adicione:
 
-| Campo    | Valor                    |
-| -------- | ------------------------ |
-| Subdomain| `api`                    |
-| Domain   | `seudominio.org`         |
-| Service  | `http://backend:3000`    |
+| Campo     | Valor                 |
+| --------- | --------------------- |
+| Subdomain | `api-lixo`            |
+| Domain    | `brconsultorias.com`  |
+| Service   | `http://backend:3000` |
 
 > `backend` é o nome do serviço no compose, resolvido pela rede interna do
 > Docker. Não use `localhost` — dentro do container do túnel, `localhost` é
@@ -158,7 +176,7 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod \
   exec backend npm run migrate
 
 # conferir
-curl https://api.seudominio.org/health
+curl https://api-lixo.brconsultorias.com/health
 ```
 
 Esperado: `{"status":"OK","database":"connected",...}`
@@ -186,8 +204,11 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod \
 | Build output directory | `dist`          |
 | Root directory         | `web`           |
 
-3. **Environment variables** → `VITE_API_URL` = `https://api.seudominio.org`
-4. **Custom domains** → `seudominio.org`
+3. **Environment variables** → `VITE_API_URL` = `https://api-lixo.brconsultorias.com`
+4. **Custom domains** → `lixonarua.brconsultorias.com`
+
+> ⚠️ Use o **subdomínio**, nunca `brconsultorias.com` sozinho. Apontar o
+> Pages para o domínio raiz substituiria o site que já está no ar.
 
 O deploy passa a ser automático a cada push na `main`.
 
@@ -205,7 +226,7 @@ e reinicie o backend.
 Aponte para a API de produção em `mobile/app.json`:
 
 ```json
-"extra": { "apiUrl": "https://api.seudominio.org" }
+"extra": { "apiUrl": "https://api-lixo.brconsultorias.com" }
 ```
 
 Em build, o `hostUri` do Expo não existe, então sem isso o app tentaria
@@ -291,7 +312,7 @@ O `restart: unless-stopped` religa tudo se o servidor reiniciar.
 [ ] Bucket R2 criado, com dominio publico conectado
 [ ] S3_PUBLIC_URL preenchido (sem ele as fotos nao aparecem)
 [ ] Fotos antigas migradas e URLs atualizadas no banco
-[ ] Tunel respondendo: curl https://api.seudominio.org/health
+[ ] Tunel respondendo: curl https://api-lixo.brconsultorias.com/health
 [ ] CORS_ORIGIN com o dominio real do Pages
 [ ] ufw ativo, so SSH entrando
 [ ] Nenhum `ports:` publicado no compose de producao
