@@ -290,25 +290,50 @@ No iOS o mapa usa Apple Maps, que não exige chave.
 O volume `postgres_data` guarda tudo. Sem backup, um `docker compose down -v`
 apaga a base sem confirmação.
 
+As fotos ficam no R2, que tem durabilidade própria. O backup cobre o banco,
+que é o único dado existente apenas neste servidor.
+
+### Instalar
+
 ```bash
-# /home/lixo/backup.sh
-cd /home/lixo/lixo-na-rua
-docker compose -f docker-compose.prod.yml --env-file .env.prod \
-  exec -T postgres pg_dump -U "$DB_USER" "$DB_NAME" \
-  | gzip > "/home/lixo/backups/db-$(date +%F).sql.gz"
-find /home/lixo/backups -name "db-*.sql.gz" -mtime +30 -delete
+cd ~/lixo-na-rua
+chmod +x scripts/backup.sh scripts/restaurar.sh
+mkdir -p ~/backups
+
+# testar antes de agendar
+./scripts/backup.sh
+ls -lh ~/backups
 ```
+
+Agendar para as 3h da manhã:
 
 ```bash
 crontab -e
-# 0 3 * * * /home/lixo/backup.sh
 ```
 
-As fotos ficam no R2, que já tem durabilidade própria — o backup cobre o
-banco, que é o que este servidor guarda.
+Adicione a linha:
 
-**Backup que nunca foi restaurado não é backup.** Teste a restauração num
-banco descartável antes de precisar dela.
+```
+0 3 * * * /home/lixo/lixo-na-rua/scripts/backup.sh >> /home/lixo/backups/backup.log 2>&1
+```
+
+O script mantém 30 dias e apaga os mais antigos. Ele também **descarta
+backups menores que 1 KB**: um `pg_dump` que falha no meio produz um `.gz`
+pequeno e aparentemente válido, e sem essa checagem o arquivo quebrado
+substituiria silenciosamente os bons.
+
+### Restaurar
+
+```bash
+./scripts/restaurar.sh ~/backups/db-2026-08-16-0300.sql.gz
+```
+
+Para o backend, restaura e sobe de novo. Pede confirmação digitada, porque
+substitui os dados atuais.
+
+**Backup que nunca foi restaurado não é backup, é esperança.** Teste a
+restauração antes de precisar dela — de preferência num servidor
+descartável, não neste.
 
 ---
 
