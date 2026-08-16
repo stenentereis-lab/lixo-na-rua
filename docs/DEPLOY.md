@@ -1,39 +1,61 @@
-# Deploy e produção
+# Deploy — Cloudflare + VPS
 
-> Estado: **infraestrutura pronta, ainda não publicado.** Este documento
-> descreve como publicar e o que verificar antes.
+> Estado: **infraestrutura pronta, ainda não publicado.**
 
-## Diferenças entre desenvolvimento e produção
+## Arquitetura
 
-| Item          | Desenvolvimento         | Produção                          |
-| ------------- | ----------------------- | --------------------------------- |
-| Backend       | `nodemon` no host       | container, `node src/index.js`    |
-| Fotos         | disco local             | S3 ou compatível                  |
-| Postgres      | porta 5432 exposta      | só na rede interna do compose     |
-| `JWT_SECRET`  | valor de exemplo        | aleatório, longo, secreto         |
-| `CORS_ORIGIN` | `localhost:3001`        | domínio real                      |
-| Reinício      | manual                  | `unless-stopped`                  |
+```
+                 ┌──────────────────────────────┐
+   navegador ───▶│  Cloudflare Pages (web)      │
+                 └──────────────┬───────────────┘
+                                │ HTTPS
+   celular ────────────────────▶│
+                 ┌──────────────▼───────────────┐
+                 │  Cloudflare Tunnel           │
+                 └──────────────┬───────────────┘
+                                │ conexão de dentro para fora
+                 ┌──────────────▼───────────────┐
+                 │  VPS (docker compose)        │
+                 │   backend  ──▶  Postgres     │
+                 └──────────────┬───────────────┘
+                                │
+                 ┌──────────────▼───────────────┐
+                 │  Cloudflare R2 (fotos)       │
+                 └──────────────────────────────┘
+```
 
-## 1. Armazenamento das fotos
+**O servidor não abre nenhuma porta para a internet.** O túnel conecta de
+dentro para fora, então o firewall do VPS pode ficar fechado, com só o SSH
+entrando. Isso elimina a maior superfície de ataque de um servidor exposto.
 
-**Este é o passo que não dá para pular.** Com `STORAGE_DRIVER=local`, as
-fotos ficam no disco do container e **somem a cada deploy** — o backend
-avisa no boot se detectar essa combinação.
+## Custo estimado
 
-O código já suporta S3 e qualquer serviço compatível. A escolha do
-provedor é sua:
+| Item              | Serviço            | Custo                    |
+| ----------------- | ------------------ | ------------------------ |
+| Servidor          | VPS 2 vCPU / 4 GB  | ~€4–6 por mês            |
+| Fotos             | Cloudflare R2      | 10 GB grátis, sem egress |
+| Site              | Cloudflare Pages   | grátis                   |
+| Túnel, DNS, SSL   | Cloudflare         | grátis                   |
+| Domínio           | registro           | ~R$40 por ano            |
 
-| Provedor              | Custo de saída | Observação                              |
-| --------------------- | -------------- | --------------------------------------- |
-| **Cloudflare R2**     | **zero**       | 10 GB grátis; boa opção para app cívico |
-| **Backblaze B2**      | baixo          | 10 GB grátis                            |
-| DigitalOcean Spaces   | incluso        | preço fixo mensal                       |
-| AWS S3                | **cobrado**    | saída pode surpreender com tráfego alto |
+O R2 não cobra transferência de saída — é o que mais pesaria num app cheio
+de fotos.
 
-Tráfego de saída é o que pesa num app cheio de fotos. Por isso R2 e B2
-aparecem primeiro.
+---
 
-Depois de criar o bucket, preencha em `.env.prod`:
+## 1. Fotos no R2
+
+1. **R2** → *Create bucket* → nome `lixo-na-rua-fotos`
+2. **Manage R2 API Tokens** → *Create API Token*
+   - Permissão: **Object Read & Write**
+   - Restrinja ao bucket criado
+   - Guarde `Access Key ID` e `Secret Access Key` — o segredo só aparece uma vez
+3. No bucket → **Settings** → **S3 API**: copie o endpoint
+   (`https://<account-id>.r2.cloudflarestorage.com`)
+4. Ainda em Settings → **Public access** → *Connect domain* →
+   `fotos.seudominio.org`
+
+Preencha no `.env.prod`:
 
 ```ini
 STORAGE_DRIVER=s3
@@ -42,142 +64,155 @@ S3_REGION=auto
 S3_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
 S3_ACCESS_KEY_ID=...
 S3_SECRET_ACCESS_KEY=...
-S3_PUBLIC_URL=https://fotos.lixonarua.org
+S3_PUBLIC_URL=https://fotos.seudominio.org
 ```
 
-`S3_ENDPOINT` vazio significa AWS S3. Preenchido, aponta para o
-compatível. O backend recusa subir se faltar credencial — falha no boot é
-melhor que descobrir no primeiro upload de um usuário real.
+> `S3_REGION=auto` é exigência do R2. O `S3_PUBLIC_URL` precisa do domínio
+> conectado: sem ele, o bucket não serve os arquivos publicamente e as fotos
+> não aparecem no app.
 
 ### Migrar as fotos que já existem
 
-Se já houver denúncias com fotos em disco, copie os arquivos de
-`backend/uploads/` para o bucket **antes** de trocar o driver, mantendo os
-mesmos nomes. As URLs gravadas no banco (`/uploads/<uuid>.jpg`) precisarão
-ser reescritas para o novo prefixo — quanto mais cedo isso for feito,
-menos linhas para atualizar.
+As denúncias criadas até agora têm imagens em `backend/uploads/` e URLs no
+formato `/uploads/<uuid>.jpg`. Antes de trocar o driver:
 
-## 2. Segredos
+1. Suba os arquivos para o bucket, mantendo o nome, sob o prefixo `denuncias/`
+2. Atualize as URLs no banco:
 
-```powershell
-# JWT_SECRET
-node -e "console.log(require('crypto').randomBytes(48).toString('base64'))"
+```sql
+UPDATE complaints
+   SET image_url = 'denuncias/' || substring(image_url from '/uploads/(.*)')
+ WHERE image_url LIKE '/uploads/%';
 ```
 
-O backend **recusa subir em produção** se o `JWT_SECRET` ainda for o valor
-de desenvolvimento. Trocar o segredo invalida todas as sessões: os
-usuários precisarão entrar de novo.
+Faça isso enquanto são poucas linhas.
 
-Senha do banco: longa, aleatória, diferente da de desenvolvimento.
+---
 
-Nada disso vai para o repositório. `.env` e `.env.prod` estão no
-`.gitignore`; confirme com `git check-ignore .env.prod`.
+## 2. Servidor
 
-## 3. Publicar
+Qualquer VPS com Docker serve — Hetzner, Contabo, DigitalOcean, Oracle Free.
+Ubuntu 24.04 LTS.
 
 ```bash
-cp .env.prod.example .env.prod    # e preencha
+# no servidor, como root
+apt update && apt upgrade -y
+curl -fsSL https://get.docker.com | sh
+
+# usuário sem privilégios para o app
+adduser --disabled-password --gecos "" lixo
+usermod -aG docker lixo
+
+# firewall: só SSH entra. O túnel dispensa o resto.
+ufw allow OpenSSH
+ufw enable
+```
+
+```bash
+# como o usuário lixo
+su - lixo
+git clone https://github.com/stenentereis-lab/lixo-na-rua.git
+cd lixo-na-rua
+cp .env.prod.example .env.prod
+nano .env.prod          # preencha tudo
+```
+
+### Segredos
+
+```bash
+node -e "console.log(require('crypto').randomBytes(48).toString('base64'))"   # JWT_SECRET
+node -e "console.log(require('crypto').randomBytes(24).toString('base64url'))" # DB_PASSWORD
+```
+
+O backend **recusa subir** se o `JWT_SECRET` ainda for o de desenvolvimento.
+Trocar o segredo invalida as sessões existentes: todo mundo faz login de novo.
+
+---
+
+## 3. Túnel
+
+1. **Zero Trust** → **Networks** → **Tunnels** → *Create a tunnel*
+2. Tipo **Cloudflared**, nome `lixo-na-rua`
+3. Copie o **token** e coloque em `CLOUDFLARE_TUNNEL_TOKEN` no `.env.prod`
+4. Em **Public Hostnames**, adicione:
+
+| Campo    | Valor                    |
+| -------- | ------------------------ |
+| Subdomain| `api`                    |
+| Domain   | `seudominio.org`         |
+| Service  | `http://backend:3000`    |
+
+> `backend` é o nome do serviço no compose, resolvido pela rede interna do
+> Docker. Não use `localhost` — dentro do container do túnel, `localhost` é
+> o próprio túnel.
+
+---
+
+## 4. Subir
+
+```bash
 docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 
-# criar as tabelas na primeira vez
+# criar as tabelas, só na primeira vez
 docker compose -f docker-compose.prod.yml --env-file .env.prod \
   exec backend npm run migrate
 
 # conferir
-curl https://api.seu-dominio.org/health
+curl https://api.seudominio.org/health
 ```
 
+Esperado: `{"status":"OK","database":"connected",...}`
+
 ### Primeiro administrador
+
+Cadastre-se pelo app e depois:
 
 ```bash
 docker compose -f docker-compose.prod.yml --env-file .env.prod \
   exec backend npm run set-role -- voce@exemplo.com admin
 ```
 
-## 4. HTTPS
+---
 
-O compose expõe HTTP na porta 3000. **Não publique assim.** Sem TLS, a
-senha e o token trafegam em texto puro.
+## 5. Site no Pages
 
-Coloque um proxy reverso na frente — Caddy, Nginx com certbot, ou o
-balanceador do provedor. O Caddy resolve certificado sozinho:
+1. **Workers & Pages** → *Create* → **Pages** → conectar o repositório
+2. Configuração de build:
 
-```
-api.lixonarua.org {
-    reverse_proxy localhost:3000
-}
-```
+| Campo                  | Valor           |
+| ---------------------- | --------------- |
+| Framework preset       | Vite            |
+| Build command          | `npm run build` |
+| Build output directory | `dist`          |
+| Root directory         | `web`           |
 
-Depois disso, `CORS_ORIGIN` deve listar apenas origens `https://`.
+3. **Environment variables** → `VITE_API_URL` = `https://api.seudominio.org`
+4. **Custom domains** → `seudominio.org`
 
-## 5. Backup
+O deploy passa a ser automático a cada push na `main`.
 
-O volume `postgres_data` guarda tudo. Sem backup, um `docker compose down
--v` apaga a base inteira sem confirmação.
+> `_headers` e `_redirects` já estão em `web/public/` e são aplicados
+> sozinhos pelo Pages. O `_redirects` faz qualquer caminho servir o
+> `index.html`, senão recarregar numa rota interna daria 404.
 
-```bash
-# diário, via cron
-docker compose -f docker-compose.prod.yml --env-file .env.prod \
-  exec -T postgres pg_dump -U "$DB_USER" "$DB_NAME" | gzip > backup-$(date +%F).sql.gz
-```
+Depois de publicar, ajuste o `CORS_ORIGIN` no `.env.prod` com o domínio real
+e reinicie o backend.
 
-Backup que nunca foi restaurado não é backup. Teste a restauração antes de
-precisar dela.
+---
 
-## Checklist antes de publicar
+## 6. App mobile
 
-```
-[ ] JWT_SECRET aleatorio, diferente do de desenvolvimento
-[ ] Senha do banco longa e exclusiva
-[ ] STORAGE_DRIVER=s3 com bucket criado e credenciais testadas
-[ ] CORS_ORIGIN com o dominio real, so https
-[ ] HTTPS configurado no proxy reverso
-[ ] Postgres sem porta exposta para a internet
-[ ] npm test e npm run test:integration passando
-[ ] Migrations aplicadas
-[ ] Backup automatizado e restauracao testada
-[ ] Primeiro admin promovido
-[ ] .env.prod fora do git (git check-ignore .env.prod)
-```
-
-## Monitoramento
-
-`GET /health` responde:
-
-- **200** com `"database": "connected"` — tudo de pé
-- **503** com `"database": "unavailable"` — API no ar, banco fora
-
-Os dois códigos distintos permitem que o monitoramento diferencie
-"aplicação caiu" de "banco caiu". O `HEALTHCHECK` do Dockerfile já usa
-esse endpoint.
-
-## Publicar o app mobile
-
-### Chave do Google Maps (Android)
-
-O mapa do app funciona **no Expo Go sem configuração**, porque o próprio
-Expo Go traz a chave do Google. Numa build própria para Android, o mapa
-aparece **cinza e vazio** sem uma chave sua.
-
-1. No Google Cloud Console, ative a **Maps SDK for Android**
-2. Crie uma chave de API e restrinja ao pacote `com.lixonarua.app`
-3. Adicione em `mobile/app.json`:
+Aponte para a API de produção em `mobile/app.json`:
 
 ```json
-"android": {
-  "config": {
-    "googleMaps": { "apiKey": "SUA_CHAVE" }
-  }
-}
+"extra": { "apiUrl": "https://api.seudominio.org" }
 ```
 
-No iOS o mapa usa o Apple Maps, que não exige chave.
+Em build, o `hostUri` do Expo não existe, então sem isso o app tentaria
+`localhost`.
 
-> A chave fica no `app.json`, que é versionado. Restrinja-a ao pacote do
-> app no console do Google — sem restrição, qualquer um pode usá-la e a
-> cobrança vem para você.
-
-### Build
+Para Android, o mapa precisa de uma chave do Google Maps — ver
+[Chave do Google Maps](#chave-do-google-maps-android).
 
 ```bash
 npm install -g eas-cli
@@ -185,23 +220,107 @@ eas login
 eas build --platform android
 ```
 
-A URL da API precisa apontar para produção: em build, `hostUri` não
-existe, então defina em `app.json`:
+### Chave do Google Maps (Android)
+
+No **Expo Go** o mapa funciona sem configuração, porque o próprio Expo Go
+traz a chave. Numa build sua, o mapa fica **cinza e vazio** sem uma chave.
+
+1. Google Cloud Console → ative **Maps SDK for Android**
+2. Crie a chave e **restrinja ao pacote** `com.lixonarua.app`
+3. Em `mobile/app.json`:
 
 ```json
-"extra": { "apiUrl": "https://api.lixonarua.org" }
+"android": {
+  "config": { "googleMaps": { "apiKey": "SUA_CHAVE" } }
+}
 ```
+
+> A chave fica num arquivo versionado. Restrinja-a ao pacote no console do
+> Google — sem restrição, qualquer um usa e a cobrança vem para você.
+
+No iOS o mapa usa Apple Maps, que não exige chave.
+
+---
+
+## Backup
+
+O volume `postgres_data` guarda tudo. Sem backup, um `docker compose down -v`
+apaga a base sem confirmação.
+
+```bash
+# /home/lixo/backup.sh
+cd /home/lixo/lixo-na-rua
+docker compose -f docker-compose.prod.yml --env-file .env.prod \
+  exec -T postgres pg_dump -U "$DB_USER" "$DB_NAME" \
+  | gzip > "/home/lixo/backups/db-$(date +%F).sql.gz"
+find /home/lixo/backups -name "db-*.sql.gz" -mtime +30 -delete
+```
+
+```bash
+crontab -e
+# 0 3 * * * /home/lixo/backup.sh
+```
+
+As fotos ficam no R2, que já tem durabilidade própria — o backup cobre o
+banco, que é o que este servidor guarda.
+
+**Backup que nunca foi restaurado não é backup.** Teste a restauração num
+banco descartável antes de precisar dela.
+
+---
+
+## Atualizar
+
+```bash
+cd /home/lixo/lixo-na-rua
+git pull
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+docker compose -f docker-compose.prod.yml --env-file .env.prod \
+  exec backend npm run migrate
+```
+
+O `restart: unless-stopped` religa tudo se o servidor reiniciar.
+
+---
+
+## Checklist antes de ir ao ar
+
+```
+[ ] JWT_SECRET aleatorio, diferente do de desenvolvimento
+[ ] DB_PASSWORD longa e exclusiva
+[ ] Bucket R2 criado, com dominio publico conectado
+[ ] S3_PUBLIC_URL preenchido (sem ele as fotos nao aparecem)
+[ ] Fotos antigas migradas e URLs atualizadas no banco
+[ ] Tunel respondendo: curl https://api.seudominio.org/health
+[ ] CORS_ORIGIN com o dominio real do Pages
+[ ] ufw ativo, so SSH entrando
+[ ] Nenhum `ports:` publicado no compose de producao
+[ ] Migrations aplicadas
+[ ] Backup no cron e restauracao testada
+[ ] Primeiro admin promovido
+[ ] npm test e npm run test:integration passando
+[ ] .env.prod fora do git (git check-ignore .env.prod)
+```
+
+## Monitoramento
+
+`GET /health` responde **200** com `"database": "connected"`, ou **503** com
+`"database": "unavailable"` se a API estiver de pé mas o banco fora. Os dois
+códigos permitem distinguir "aplicação caiu" de "banco caiu".
+
+O Cloudflare Zero Trust mostra o estado do túnel. O `HEALTHCHECK` do
+Dockerfile usa esse mesmo endpoint.
 
 ## Dívidas conhecidas
 
-| Item                     | Impacto                                                      | Onde       |
-| ------------------------ | ------------------------------------------------------------ | ---------- |
-| Rate limit em memória    | Com 2+ instâncias o limite se multiplica. Migrar para Redis. | DECISOES #008 |
-| Sem refresh token        | Sessão de 7 dias; expirou, login de novo.                    | —          |
-| Sem rotação de logs      | Log vai para stdout; depende do coletor do provedor.          | —          |
+| Item                  | Impacto                                                       | Onde          |
+| --------------------- | ------------------------------------------------------------- | ------------- |
+| Rate limit em memória | Com 2+ instâncias o limite se multiplica. Migrar para Redis.  | DECISOES #008 |
+| Sem refresh token     | Sessão de 7 dias; expirou, login de novo.                     | —             |
+| Sem rotação de logs   | Log vai para stdout; depende do coletor do provedor.           | —             |
 
 ## Ver também
 
 - [SETUP.md](SETUP.md) — ambiente de desenvolvimento
-- [ARQUITETURA.md](ARQUITETURA.md) — como o sistema é organizado
+- [ARQUITETURA.md](ARQUITETURA.md) — organização do sistema
 - [DECISOES.md](DECISOES.md) — por que as escolhas foram feitas

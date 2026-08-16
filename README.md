@@ -129,7 +129,8 @@ e por isso mesmo **nunca coloque segredo lá**, tudo vai para o bundle público.
 | [docs/SETUP.md](docs/SETUP.md)                 | Ambiente do zero + problemas conhecidos   |
 | [docs/ARQUITETURA.md](docs/ARQUITETURA.md)     | Organização do sistema e modelo de dados  |
 | [docs/API.md](docs/API.md)                     | Contrato dos endpoints                    |
-| [docs/DEPLOY.md](docs/DEPLOY.md)               | Publicar em produção + checklist          |
+| [docs/DEPLOY.md](docs/DEPLOY.md)               | Publicar: Cloudflare + VPS, passo a passo |
+| [docs/MARCA.md](docs/MARCA.md)                 | Paleta, ícones e identidade visual        |
 | [docs/DECISOES.md](docs/DECISOES.md)           | Decisões técnicas e seus custos           |
 | [docs/CONTRIBUINDO.md](docs/CONTRIBUINDO.md)   | Padrões de commit, código e segurança     |
 

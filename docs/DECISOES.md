@@ -5,6 +5,43 @@ Cada entrada: contexto, decisão, consequências. Ordem cronológica inversa
 
 ---
 
+## 020 — Cloudflare Tunnel no lugar de portas abertas
+
+**Data:** 16/08/2026 · **Status:** aceita
+
+### Contexto
+
+Com o servidor definido (VPS) e o resto na Cloudflare, faltava decidir como
+o backend fica acessível. O caminho tradicional: abrir a porta 443, instalar
+proxy reverso, configurar certificado, renovar certificado.
+
+### Decisão
+
+**Cloudflare Tunnel.** O `cloudflared` roda ao lado do backend, no mesmo
+compose, e abre uma conexão **de dentro para fora** até a borda da
+Cloudflare. O tráfego público chega pela Cloudflare e desce por esse túnel.
+
+### Consequências
+
+**Ganhos** — nenhuma porta entra no servidor; o `ufw` fica com só o SSH
+aberto. Isso remove de uma vez a maior superfície de ataque de um servidor
+exposto: varreduras de porta, tentativa de força bruta em serviços expostos,
+exploração de proxy mal configurado. Certificado e renovação deixam de
+existir como tarefa. E o backend ganha DDoS protection e WAF da Cloudflare
+sem configuração extra.
+
+**Custos** — dependência de um fornecedor no caminho crítico: se a
+Cloudflare cair, a API fica inacessível mesmo com o servidor de pé. Depurar
+exige olhar os logs do túnel além dos do backend. E o serviço no túnel
+aponta para `http://backend:3000`, nome da rede interna do Docker — usar
+`localhost` ali é um erro fácil de cometer, porque dentro do container do
+túnel `localhost` é o próprio túnel.
+
+**Alternativa se um dia quiser sair:** publicar a porta 443 com Caddy na
+frente. O resto do compose não muda.
+
+---
+
 ## 019 — Verde da marca não é o verde dos botões
 
 **Data:** 16/08/2026 · **Status:** aceita

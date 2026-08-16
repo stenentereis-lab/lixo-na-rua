@@ -1,0 +1,19 @@
+# Cabecalhos aplicados pelo Cloudflare Pages.
+# Formato: caminho, depois cada cabecalho indentado.
+
+/*
+  # Impede que o site seja embutido em iframe de terceiros (clickjacking)
+  X-Frame-Options: DENY
+  # Impede o navegador de "adivinhar" o tipo do arquivo
+  X-Content-Type-Options: nosniff
+  # Nao vaza a URL completa ao sair do site
+  Referrer-Policy: strict-origin-when-cross-origin
+  # Nega recursos que o site nao usa. Camera e GPS ficam no app nativo;
+  # aqui o navegador nao deve nem poder pedir.
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+  # Forca HTTPS por um ano
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+
+# Assets do Vite tem hash no nome: o conteudo nunca muda para a mesma URL.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

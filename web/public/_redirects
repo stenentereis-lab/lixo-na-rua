@@ -1,0 +1,4 @@
+# Aplicacao de pagina unica: qualquer caminho serve o index.html e o
+# React decide o que mostrar. Sem isto, recarregar numa rota interna
+# devolveria 404 do Pages.
+/*  /index.html  200

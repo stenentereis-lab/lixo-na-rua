@@ -1,10 +1,14 @@
-# Compose de produção.
+# Compose de produção — VPS + Cloudflare.
 #
-# Diferenças em relação ao docker-compose.yml (desenvolvimento):
-#   - o backend roda como container, não pelo nodemon
-#   - segredos vêm do ambiente, nunca ficam escritos aqui
-#   - o Postgres não expõe porta para fora da rede do compose
-#   - reinício automático
+# Arquitetura:
+#   Cloudflare Pages  →  web (estático)
+#   Cloudflare Tunnel →  backend (nesta máquina)
+#   Cloudflare R2     →  fotos
+#   este compose      →  backend + Postgres
+#
+# Nenhuma porta é publicada na internet. O túnel abre uma conexão de
+# dentro para fora, então o servidor pode ficar com o firewall fechado —
+# só SSH precisa entrar.
 #
 # Uso:
 #   cp .env.prod.example .env.prod   # e preencha
@@ -20,8 +24,8 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    # Sem `ports`: o banco só é alcançável pela rede interna do compose.
-    # Expor 5432 na internet é um dos erros mais comuns e mais caros.
+    # Sem `ports`: o banco só existe na rede interna do compose.
+    # Publicar 5432 é um dos erros mais comuns e mais caros.
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U ${DB_USER} -d ${DB_NAME}']
       interval: 10s
@@ -46,16 +50,27 @@ services:
       CORS_ORIGIN: ${CORS_ORIGIN}
       STORAGE_DRIVER: ${STORAGE_DRIVER:-s3}
       S3_BUCKET: ${S3_BUCKET}
-      S3_REGION: ${S3_REGION}
+      S3_REGION: ${S3_REGION:-auto}
       S3_ENDPOINT: ${S3_ENDPOINT}
       S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID}
       S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY}
       S3_PUBLIC_URL: ${S3_PUBLIC_URL}
-    ports:
-      - '${API_PORT:-3000}:3000'
+    # Sem `ports`: quem alcança o backend é o túnel, pela rede interna.
+    # Para depurar direto no servidor, use:
+    #   docker compose -f docker-compose.prod.yml exec backend sh
     depends_on:
       postgres:
         condition: service_healthy
+    restart: unless-stopped
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: lixo_tunnel
+    # --no-autoupdate: atualização automática reinicia o processo em
+    # horário imprevisível. Atualize junto com o resto do deploy.
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - backend
     restart: unless-stopped
 
 volumes:
