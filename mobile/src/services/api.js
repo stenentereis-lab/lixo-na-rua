@@ -36,24 +36,27 @@ const IP_LOCAL = /^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/;
  * @returns {string} ex.: "http://192.168.0.10:3000"
  */
 function descobrirApiUrl() {
-  // 1. Configuração explícita em app.json > extra.apiUrl.
-  //    Necessária quando o Expo roda em modo túnel (o host vira um
-  //    endereço .exp.direct, que não serve para achar o backend) ou
-  //    quando o backend está em outra máquina.
   const configurada = Constants.expoConfig?.extra?.apiUrl;
-  if (configurada) return configurada;
 
-  // 2. IP da máquina do Metro, que normalmente é onde o backend roda.
+  // Em desenvolvimento, o IP da máquina do Metro tem prioridade: é lá que
+  // o backend local roda. Sem isso, ter apiUrl de produção no app.json
+  // impediria testar qualquer mudança do backend sem publicá-la antes.
   const hostUri =
     Constants.expoConfig?.hostUri || Constants.manifest?.debuggerHost || '';
   const host = hostUri.split(':')[0];
 
+  if (__DEV__ && IP_LOCAL.test(host)) {
+    return `http://${host}:${PORTA_BACKEND}`;
+  }
+
+  // Build de produção, ou modo túnel (host vira .exp.direct e não serve
+  // para achar o backend).
+  if (configurada) return configurada;
+
   if (IP_LOCAL.test(host)) return `http://${host}:${PORTA_BACKEND}`;
 
-  // 3. Sobrou localhost — só funciona em emulador rodando na própria
-  //    máquina. Num celular físico, "localhost" é o próprio aparelho.
-  //    Acontece quando o Expo não detecta a rede (mostra 127.0.0.1) ou
-  //    em modo túnel: nos dois casos, defina extra.apiUrl no app.json.
+  // Último caso: num celular físico "localhost" é o próprio aparelho.
+  // Acontece quando o Expo não detecta a rede (mostra 127.0.0.1).
   return `http://localhost:${PORTA_BACKEND}`;
 }
 
@@ -62,7 +65,12 @@ function descobrirApiUrl() {
  * físico. A tela de login usa isso para avisar antes de o usuário
  * tentar entrar e receber um erro de rede sem explicação.
  */
-export const apiUrlSuspeita = () => !IP_LOCAL.test(descobrirApiUrl());
+export const apiUrlSuspeita = () => {
+  const url = descobrirApiUrl();
+  // https:// é a API de produção — não há nada suspeito nisso.
+  if (url.startsWith('https://')) return false;
+  return !IP_LOCAL.test(url);
+};
 
 export const API_URL = descobrirApiUrl();
 

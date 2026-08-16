@@ -1,6 +1,14 @@
 # Deploy — Cloudflare + VPS
 
-> Estado: **infraestrutura pronta, ainda não publicado.**
+> Estado: **no ar desde 16/08/2026.**
+>
+> | Peça | Endereço | Onde roda |
+> | --- | --- | --- |
+> | API | https://api-lixo.brconsultorias.com | VPS Hetzner CX23, Helsinki |
+> | Site | https://lixonarua.brconsultorias.com | Cloudflare Pages |
+> | Fotos | https://fotos-lixo.brconsultorias.com | Cloudflare R2 |
+>
+> Reserva do site: `lixo-na-rua.pages.dev`
 
 ## Arquitetura
 
@@ -233,14 +241,18 @@ e reinicie o backend.
 
 ## 6. App mobile
 
-Aponte para a API de produção em `mobile/app.json`:
+Já configurado em `mobile/app.json`:
 
 ```json
 "extra": { "apiUrl": "https://api-lixo.brconsultorias.com" }
 ```
 
-Em build, o `hostUri` do Expo não existe, então sem isso o app tentaria
-`localhost`.
+> **Como o app escolhe a URL:** em desenvolvimento (`__DEV__`), o IP da
+> máquina do Metro tem prioridade — é lá que o backend local roda. Em build
+> de produção, `hostUri` não existe e ele cai no `extra.apiUrl`.
+>
+> A ordem importa: se `extra.apiUrl` viesse primeiro, seria impossível testar
+> qualquer mudança do backend sem publicá-la antes. Ver `src/services/api.js`.
 
 Para Android, o mapa precisa de uma chave do Google Maps — ver
 [Chave do Google Maps](#chave-do-google-maps-android).

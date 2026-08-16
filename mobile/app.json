@@ -28,6 +28,10 @@
         "backgroundColor": "#7caf2e"
       }
     },
+    "extra": {
+      "//": "URL da API em build de producao. Em desenvolvimento o app ignora este valor e usa o IP da maquina do Metro — ver src/services/api.js",
+      "apiUrl": "https://api-lixo.brconsultorias.com"
+    },
     "plugins": [
       [
         "expo-camera",

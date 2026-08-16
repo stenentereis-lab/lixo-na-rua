@@ -2,6 +2,9 @@
 
 Aplicativo multiplataforma para denúncia de lixo na rua com foto georreferenciada.
 
+**No ar:** [lixonarua.brconsultorias.com](https://lixonarua.brconsultorias.com) ·
+API em [api-lixo.brconsultorias.com](https://api-lixo.brconsultorias.com/health)
+
 ## Tech Stack
 
 - **Backend**: Node.js + Express + PostgreSQL + PostGIS
