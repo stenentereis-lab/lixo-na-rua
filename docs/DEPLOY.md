@@ -268,18 +268,30 @@ eas build --platform android
 No **Expo Go** o mapa funciona sem configuração, porque o próprio Expo Go
 traz a chave. Numa build sua, o mapa fica **cinza e vazio** sem uma chave.
 
-1. Google Cloud Console → ative **Maps SDK for Android**
-2. Crie a chave e **restrinja ao pacote** `com.lixonarua.app`
-3. Em `mobile/app.json`:
+Já configurada em `mobile/app.json` → `android.config.googleMaps.apiKey`.
 
-```json
-"android": {
-  "config": { "googleMaps": { "apiKey": "SUA_CHAVE" } }
-}
+**Por que ela fica num arquivo versionado.** Uma chave do Maps para Android
+é embutida no APK por natureza — qualquer pessoa que baixe o app consegue
+extraí-la, e o Google projetou o sistema sabendo disso. A proteção não é o
+sigilo, e sim a restrição:
+
+| Restrição | Onde | Efeito |
+| --- | --- | --- |
+| Apps Android | pacote `com.lixonarua.app` + SHA-1 | a chave só funciona no seu app |
+| APIs | apenas Maps SDK for Android | não serve para outros serviços Google |
+
+**Sem a restrição de aplicativo, a chave é livre e a cobrança vem para
+você.** Confira no Google Cloud Console → APIs e serviços → Credenciais →
+clique na chave → *Restrições de aplicativo*.
+
+O SHA-1 do certificado de assinatura sai do EAS:
+
+```bash
+eas credentials
 ```
 
-> A chave fica num arquivo versionado. Restrinja-a ao pacote no console do
-> Google — sem restrição, qualquer um usa e a cobrança vem para você.
+Escolha Android → o SHA-1 aparece nas credenciais de build. Adicione-o à
+restrição junto com o nome do pacote.
 
 No iOS o mapa usa Apple Maps, que não exige chave.
 
