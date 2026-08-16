@@ -307,6 +307,38 @@ rode `cd` antes do `npm`. Confira com `pwd`.
 
 PowerShell 5.1. Rode um comando por linha.
 
+### Conexão SSH cai sozinha
+
+Sintoma: `client_loop: send disconnect: Connection reset`, geralmente depois
+de um comando demorado como `docker compose build`. O comando seguinte acaba
+rodando no PowerShell do seu PC, que não entende sintaxe do Linux.
+
+Roteadores e provedores encerram conexões ociosas. Configure o SSH para
+mandar um sinal periódico — uma vez só, no **seu PC**:
+
+```powershell
+Add-Content -Path $env:USERPROFILE\.ssh\config -Value "Host *"
+Add-Content -Path $env:USERPROFILE\.ssh\config -Value "  ServerAliveInterval 60"
+Add-Content -Path $env:USERPROFILE\.ssh\config -Value "  ServerAliveCountMax 5"
+```
+
+**Como saber onde você está**, antes de colar qualquer comando:
+
+| Prompt                  | Onde        | Aceita           |
+| ----------------------- | ----------- | ---------------- |
+| `PS C:\Users\user>`     | seu PC      | comandos Windows |
+| `root@lixo-na-rua:~#`   | servidor    | comandos Linux   |
+| `lixo@lixo-na-rua:~$`   | servidor    | comandos Linux   |
+
+### `su` engole o comando seguinte
+
+Colar duas linhas de uma vez depois de `su - lixo` não funciona: o `su` abre
+um shell novo e consome a linha seguinte como entrada. O `cd` some, e o
+comando seguinte roda na pasta errada.
+
+Depois de `su`, execute **um comando por vez**, esperando o prompt voltar.
+Confirme com `pwd` antes de comandos que dependem da pasta.
+
 ### Porta ocupada / processo órfão
 
 Sintomas conhecidos:

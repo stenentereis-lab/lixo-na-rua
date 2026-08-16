@@ -311,11 +311,24 @@ Agendar para as 3h da manhã:
 crontab -e
 ```
 
-Adicione a linha:
+Em vez de editar no nano, instale com um comando — é mais confiável:
 
+```bash
+echo "0 3 * * * /home/lixo/lixo-na-rua/scripts/backup.sh >> /home/lixo/backups/backup.log 2>&1" | crontab -
 ```
-0 3 * * * /home/lixo/lixo-na-rua/scripts/backup.sh >> /home/lixo/backups/backup.log 2>&1
+
+Confira **sempre**:
+
+```bash
+crontab -l
 ```
+
+Deve mostrar **uma linha**, terminando em `2>&1`, sem nada grudado depois.
+
+> Editar o crontab no nano é a origem de um erro silencioso comum: se a
+> linha for colada no início do arquivo, ela gruda no primeiro comentário
+> (`...2>&1# Edit this file to introduce tasks...`) e o cron falha toda
+> madrugada sem avisar. O `echo | crontab -` não tem esse risco.
 
 O script mantém 30 dias e apaga os mais antigos. Ele também **descarta
 backups menores que 1 KB**: um `pg_dump` que falha no meio produz um `.gz`
