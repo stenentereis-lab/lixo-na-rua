@@ -13,6 +13,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -21,6 +22,7 @@ import {
 import MapView, { Marker, Callout, Circle } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { useFocusEffect } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { api, API_URL } from '../services/api';
 import { cores, espaco, raio, CATEGORIAS } from '../theme';
@@ -53,6 +55,8 @@ function deltaParaRaio(metros) {
 
 export default function MapScreen() {
   const mapaRef = useRef(null);
+  // Sem isto os controles ficam por baixo do relógio e da bateria.
+  const margens = useSafeAreaInsets();
 
   const [local, setLocal] = useState(null);
   const [denuncias, setDenuncias] = useState([]);
@@ -119,6 +123,12 @@ export default function MapScreen() {
       500
     );
   }
+
+  // Reenquadra ao trocar o raio. Sem isto os botões mudam a busca mas o
+  // zoom continua igual, e parece que nada aconteceu.
+  useEffect(() => {
+    centralizar();
+  }, [distancia, local]);
 
   if (carregando && !local) {
     return (
@@ -193,7 +203,9 @@ export default function MapScreen() {
 
       {/* ---------- controles sobre o mapa ---------- */}
 
-      <View style={estilos.barraTopo}>
+      {/* O topo respeita a area segura e deixa 56px livres a direita,
+          onde iOS e Android desenham bussola e botoes proprios. */}
+      <View style={[estilos.barraTopo, { top: margens.top + espaco.sm }]}>
         <View style={estilos.grupo}>
           {RAIOS.map((r) => (
             <TouchableOpacity
@@ -213,7 +225,14 @@ export default function MapScreen() {
           ))}
         </View>
 
-        <View style={estilos.grupo}>
+        {/* Rolagem horizontal em vez de quebra de linha: com quebra, as
+            categorias empurravam o mapa e colidiam com a bussola. */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={estilos.grupo}
+          style={estilos.rolagem}
+        >
           <TouchableOpacity
             style={[estilos.chip, !categoria && estilos.chipAtivo]}
             onPress={() => setCategoria(null)}
@@ -241,10 +260,10 @@ export default function MapScreen() {
               </Text>
             </TouchableOpacity>
           ))}
-        </View>
+        </ScrollView>
       </View>
 
-      <View style={estilos.barraBaixo}>
+      <View style={[estilos.barraBaixo, { bottom: margens.bottom + espaco.sm }]}>
         <View style={estilos.resumo}>
           <Text style={estilos.resumoTexto}>
             {carregando
@@ -285,12 +304,13 @@ const estilos = StyleSheet.create({
 
   barraTopo: {
     position: 'absolute',
-    top: espaco.md,
     left: espaco.md,
-    right: espaco.md,
+    // Espaço à direita para a bússola do iOS e os controles do Android.
+    right: 56,
     gap: espaco.sm,
   },
-  grupo: { flexDirection: 'row', flexWrap: 'wrap', gap: espaco.xs },
+  grupo: { flexDirection: 'row', gap: espaco.xs, alignItems: 'center' },
+  rolagem: { flexGrow: 0 },
 
   chip: {
     paddingVertical: 6,
@@ -306,7 +326,6 @@ const estilos = StyleSheet.create({
 
   barraBaixo: {
     position: 'absolute',
-    bottom: espaco.md,
     left: espaco.md,
     right: espaco.md,
     flexDirection: 'row',
