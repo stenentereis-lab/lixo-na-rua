@@ -5,6 +5,112 @@ Cada entrada: contexto, decisão, consequências. Ordem cronológica inversa
 
 ---
 
+## 019 — Verde da marca não é o verde dos botões
+
+**Data:** 16/08/2026 · **Status:** aceita
+
+### Contexto
+
+A identidade visual chegou depois da interface, que estava azul. Ao
+realinhar para o verde da marca (`#7CAF2E`), o caminho óbvio seria usá-lo
+nos botões.
+
+Medindo o contraste com texto branco: **2,6**. O mínimo do critério WCAG AA
+para texto normal é 4,5.
+
+Isso não é detalhe estético. O app é usado **na rua**, com sol na tela, por
+pessoas de todas as idades. Botão ilegível ali é funcionalidade perdida.
+
+### Decisão
+
+Separar cor de marca de cor de interface:
+
+| Papel        | Cor       | Contraste |
+| ------------ | --------- | --------- |
+| Marca, decoração | `#7CAF2E` | 2,6   |
+| Ações, links | `#3D7A16` | 5,3       |
+| Texto, títulos | `#14532D` | 9,1     |
+
+O verde vivo continua presente — fundo do ícone, detalhes — mas nunca atrás
+de texto.
+
+### Consequências
+
+**Ganhos** — a interface fica legível sob sol e para baixa visão, sem abrir
+mão da identidade; os valores foram calculados, então a escolha é
+verificável e não uma opinião.
+
+**Custos** — o verde dos botões é visivelmente mais fechado que o do logo.
+Quem comparar lado a lado vai notar. É o preço de a interface funcionar.
+
+**Regra que fica:** ao introduzir cor nova, calcular o contraste antes de
+aplicar. Cor de marca é feita para impressão e telas grandes; interface tem
+exigências diferentes.
+
+### Como os ícones foram gerados
+
+O símbolo do pin foi extraído da arte por segmentação de cor, com remoção
+de componentes menores que 120 px — manchas de compressão da imagem
+original. O procedimento está em `docs/MARCA.md`; se a arte mudar,
+regenere em vez de editar os PNGs à mão.
+
+---
+
+## 018 — Armazenamento por driver, escolhido em tempo de execução
+
+**Data:** 16/08/2026 · **Status:** aceita — **substitui a #010**
+
+### Contexto
+
+A #010 aceitou disco local como solução temporária, com um custo declarado:
+container reiniciado perde as fotos, e não funciona com mais de uma
+instância. Essa dívida vencia no primeiro deploy real.
+
+A saída óbvia seria trocar o código por S3. Mas isso obrigaria a criar conta
+em nuvem antes de conseguir rodar o projeto — atrito desnecessário para quem
+só quer desenvolver.
+
+### Decisão
+
+Uma interface de armazenamento com dois drivers, selecionados por
+`STORAGE_DRIVER`:
+
+```
+src/storage/
+├── index.js   escolhe o driver
+├── local.js   disco   (padrão em desenvolvimento)
+└── s3.js      S3 e compatíveis (produção)
+```
+
+Contrato: `salvar(buffer, { mimetype }) -> { key, url, size }` e
+`remover(key)`. As rotas conversam com essa interface e não sabem onde o
+arquivo vai parar.
+
+O multer passou a usar `memoryStorage`: o buffer é entregue ao driver, que
+decide o destino. Gravar em disco antes obrigaria o driver S3 a ler de volta.
+
+### Consequências
+
+**Ganhos** — `npm install && npm run dev` continua funcionando sem nuvem
+nenhuma; a mudança para produção é variável de ambiente, não alteração de
+código; o driver S3 fala com AWS, Cloudflare R2, Backblaze B2, Spaces e
+MinIO, o que evita ficar preso a um fornecedor.
+
+O `config.js` falha no boot se `STORAGE_DRIVER=s3` sem credenciais, e avisa
+se `local` for usado em produção. Erro no boot é muito melhor que descobrir
+no primeiro upload de um usuário real.
+
+**Custos** — o `@aws-sdk/client-s3` entra nas dependências mesmo para quem
+usa disco local (o módulo só é carregado quando escolhido, mas ocupa espaço
+no `node_modules`). O driver S3 não tem teste automatizado: exigiria
+credenciais reais ou um MinIO no CI. O que o protege é o contrato — o teste
+do driver local verifica a mesma interface que o S3 implementa.
+
+**Fica pendente:** migrar as fotos já enviadas em disco para o bucket, e
+reescrever as URLs gravadas no banco. Quanto mais tarde, mais linhas.
+
+---
+
 ## 017 — Remoção separada de moderação
 
 **Data:** 16/08/2026 · **Status:** aceita
@@ -272,7 +378,7 @@ o que transforma "não conecta" em diagnóstico imediato.
 
 ## 010 — Fotos em disco local no MVP
 
-**Data:** 16/08/2026 · **Status:** aceita, **com prazo de validade**
+**Data:** 16/08/2026 · **Status:** ~~aceita~~ **substituída pela #018**
 
 ### Contexto
 

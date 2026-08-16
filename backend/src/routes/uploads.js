@@ -1,51 +1,34 @@
 /**
  * Upload de imagens.
  *
- * MVP: grava em disco local (`backend/uploads/`) e serve como estático.
- * Ver docs/DECISOES.md #010 — em produção isso vira S3 ou equivalente,
- * porque disco local não sobrevive a deploy em container nem escala para
- * mais de uma instância.
+ * A rota não sabe onde o arquivo é gravado: conversa com `src/storage`,
+ * que escolhe disco local ou S3 conforme `STORAGE_DRIVER`.
  */
-const path = require('path');
-const fs = require('fs');
-const crypto = require('crypto');
-
 const express = require('express');
 const multer = require('multer');
 
-const { ApiError } = require('../utils/errors');
+const config = require('../config');
+const storage = require('../storage');
+const { ApiError, asyncHandler } = require('../utils/errors');
 const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
-const UPLOAD_DIR = path.join(__dirname, '..', '..', 'uploads');
-fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+/** Formatos que a câmera de celular produz. */
+const MIME_PERMITIDOS = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/heic', // padrão do iPhone
+];
 
-/** Tipos aceitos. Formatos que a câmera de celular produz. */
-const MIME_PERMITIDOS = {
-  'image/jpeg': '.jpg',
-  'image/png': '.png',
-  'image/webp': '.webp',
-  'image/heic': '.heic', // padrão do iPhone
-};
-
-const TAMANHO_MAXIMO = 10 * 1024 * 1024; // 10 MB
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
-  filename: (req, file, cb) => {
-    // Nome aleatório: usar o nome enviado pelo cliente permitiria
-    // sobrescrever arquivos e path traversal ("../../etc/passwd").
-    const ext = MIME_PERMITIDOS[file.mimetype] || '.jpg';
-    cb(null, `${crypto.randomUUID()}${ext}`);
-  },
-});
-
+// Em memória, não em disco: o buffer é entregue ao driver, que decide o
+// destino. Gravar em disco antes obrigaria o driver S3 a ler de volta.
 const upload = multer({
-  storage,
-  limits: { fileSize: TAMANHO_MAXIMO, files: 1 },
+  storage: multer.memoryStorage(),
+  limits: { fileSize: config.storage.maxFileSize, files: 1 },
   fileFilter: (req, file, cb) => {
-    if (!MIME_PERMITIDOS[file.mimetype]) {
+    if (!MIME_PERMITIDOS.includes(file.mimetype)) {
       return cb(
         new ApiError(
           400,
@@ -57,13 +40,29 @@ const upload = multer({
   },
 });
 
+/** Traduz erros do multer para mensagens úteis. */
+function tratarUpload(req, res, next) {
+  upload.single('image')(req, res, (err) => {
+    if (!err) return next();
+
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      const mb = Math.round(config.storage.maxFileSize / 1024 / 1024);
+      return next(new ApiError(400, `Imagem muito grande. O limite é ${mb} MB.`));
+    }
+    if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+      return next(new ApiError(400, 'Envie a imagem no campo "image".'));
+    }
+    next(err);
+  });
+}
+
 /**
  * POST /uploads  🔒
- * Recebe uma imagem e devolve a URL pública.
+ * Recebe uma imagem e devolve a URL.
  *
  * Requisição: multipart/form-data com o campo `image`.
  *
- * @returns 201 { url, filename, size } | 400 formato/tamanho | 401
+ * @returns 201 { url, key, size, driver } | 400 | 401
  *
  * @example
  * curl -X POST http://localhost:3000/uploads \
@@ -73,36 +72,18 @@ const upload = multer({
 router.post(
   '/',
   requireAuth,
-  (req, res, next) => {
-    upload.single('image')(req, res, (err) => {
-      if (!err) return next();
-
-      // Erros do multer têm código próprio; traduzimos para mensagem útil.
-      if (err.code === 'LIMIT_FILE_SIZE') {
-        return next(
-          new ApiError(
-            400,
-            `Imagem muito grande. O limite é ${TAMANHO_MAXIMO / 1024 / 1024} MB.`
-          )
-        );
-      }
-      if (err.code === 'LIMIT_UNEXPECTED_FILE') {
-        return next(new ApiError(400, 'Envie a imagem no campo "image".'));
-      }
-      next(err);
-    });
-  },
-  (req, res) => {
+  tratarUpload,
+  asyncHandler(async (req, res) => {
     if (!req.file) {
       throw new ApiError(400, 'Nenhuma imagem enviada.');
     }
 
-    res.status(201).json({
-      url: `/uploads/${req.file.filename}`,
-      filename: req.file.filename,
-      size: req.file.size,
+    const resultado = await storage.salvar(req.file.buffer, {
+      mimetype: req.file.mimetype,
     });
-  }
+
+    res.status(201).json({ ...resultado, driver: storage.nome });
+  })
 );
 
-module.exports = { router, UPLOAD_DIR };
+module.exports = { router };

@@ -1,21 +1,33 @@
 /**
  * Paleta e espaçamentos compartilhados.
- * Manter aqui evita cores soltas espalhadas pelas telas.
+ *
+ * As cores vêm da identidade visual (lixo_na_rua.png). Atenção ao usar:
+ * o verde vivo da marca (#7CAF2E) tem contraste 2,6 com texto branco e
+ * **reprova** no critério AA de acessibilidade. Por isso ele fica só em
+ * elementos decorativos; ações e textos usam o verde fechado (#3D7A16,
+ * contraste 5,3) ou o verde escuro (#14532D, contraste 9,1).
  */
 export const cores = {
-  primaria: '#1d4ed8',
-  primariaEscura: '#1e40af',
-  fundo: '#0f172a',
-  fundoClaro: '#f8fafc',
+  /** Botões e links. Contraste 5,3 com branco — passa em AA. */
+  primaria: '#3d7a16',
+  primariaEscura: '#2f5f11',
+  /** Verde vivo da marca. Só decorativo: reprova com texto branco. */
+  marca: '#7caf2e',
+
+  fundo: '#14532d',
+  fundoClaro: '#f8faf7',
   cartao: '#ffffff',
-  texto: '#0f172a',
-  textoSuave: '#64748b',
-  textoClaro: '#f8fafc',
-  borda: '#cbd5e1',
+
+  texto: '#14532d',
+  textoSuave: '#5b6b5a',
+  textoClaro: '#f8faf7',
+
+  borda: '#cbd5c8',
+
   erro: '#dc2626',
   erroFundo: '#fef2f2',
   sucesso: '#16a34a',
-  alerta: '#f59e0b',
+  alerta: '#d97706',
 };
 
 export const espaco = {

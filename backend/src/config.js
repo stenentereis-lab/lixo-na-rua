@@ -49,4 +49,44 @@ module.exports = {
 
   /** Custo do bcrypt. 10 é o equilíbrio usual entre segurança e latência. */
   bcryptRounds: 10,
+
+  storage: {
+    /** 'local' (disco) ou 's3' (S3 ou compatível) */
+    driver: process.env.STORAGE_DRIVER || 'local',
+    /** Tamanho máximo de imagem aceito, em bytes. */
+    maxFileSize: Number(process.env.MAX_FILE_SIZE) || 10 * 1024 * 1024,
+  },
+
+  s3: {
+    bucket: process.env.S3_BUCKET,
+    region: process.env.S3_REGION || 'us-east-1',
+    /** Vazio = AWS. Preenchido = R2, B2, Spaces, MinIO... */
+    endpoint: process.env.S3_ENDPOINT,
+    accessKeyId: process.env.S3_ACCESS_KEY_ID,
+    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+    /** Domínio próprio ou CDN na frente do bucket. */
+    publicUrl: process.env.S3_PUBLIC_URL,
+  },
 };
+
+// Falha no boot em vez de descobrir só no primeiro upload que falta credencial.
+if (module.exports.storage.driver === 's3') {
+  const faltando = ['bucket', 'accessKeyId', 'secretAccessKey'].filter(
+    (k) => !module.exports.s3[k]
+  );
+
+  if (faltando.length > 0) {
+    throw new Error(
+      `STORAGE_DRIVER=s3 exige as variáveis: ${faltando
+        .map((k) => `S3_${k.replace(/[A-Z]/g, (c) => `_${c}`).toUpperCase()}`)
+        .join(', ')}. Veja docs/DEPLOY.md.`
+    );
+  }
+}
+
+if (isProduction && module.exports.storage.driver === 'local') {
+  console.warn(
+    '⚠️  STORAGE_DRIVER=local em produção: disco de container é efêmero e\n' +
+      '   as fotos serão perdidas no próximo deploy. Ver docs/DEPLOY.md.'
+  );
+}

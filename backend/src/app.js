@@ -13,7 +13,8 @@ const db = require('./db');
 const authRoutes = require('./routes/auth');
 const complaintRoutes = require('./routes/complaints');
 const mapRoutes = require('./routes/map');
-const { router: uploadRoutes, UPLOAD_DIR } = require('./routes/uploads');
+const { router: uploadRoutes } = require('./routes/uploads');
+const storage = require('./storage');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 const { asyncHandler } = require('./utils/errors');
 
@@ -58,8 +59,12 @@ app.use('/complaints', complaintRoutes);
 app.use('/map', mapRoutes);
 app.use('/uploads', uploadRoutes);
 
-// Imagens enviadas. `express.static` já barra path traversal.
-app.use('/uploads', express.static(UPLOAD_DIR, { maxAge: '7d' }));
+// Servir arquivos só faz sentido no driver local. Com S3, as imagens são
+// entregues pelo bucket ou pela CDN, sem passar por este processo.
+if (storage.nome === 'local') {
+  // `express.static` já barra path traversal.
+  app.use('/uploads', express.static(storage.UPLOAD_DIR, { maxAge: '7d' }));
+}
 
 // ---------- 404 e erros (sempre por último) ----------
 app.use(notFound);

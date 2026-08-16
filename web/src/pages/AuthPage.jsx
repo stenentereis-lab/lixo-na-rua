@@ -1,5 +1,9 @@
 /**
  * Tela de entrada: login e cadastro no mesmo formulário, alternando o modo.
+ *
+ * Layout em duas colunas — a arte da marca à esquerda, o formulário à
+ * direita. Em telas estreitas a arte some e sobra só a logo no topo do
+ * formulário: num celular, a arte empurraria os campos para fora da tela.
  */
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
@@ -49,71 +53,78 @@ export default function AuthPage() {
 
   return (
     <div className="auth-wrap">
-      <form className="card auth-card" onSubmit={enviar} noValidate>
-        <h1>Lixo na Rua</h1>
-        <p className="subtitle">
-          {isCadastro
-            ? 'Crie sua conta para começar a denunciar'
-            : 'Entre para acompanhar suas denúncias'}
-        </p>
+      <div className="auth-grid">
+        <aside className="auth-arte" aria-hidden="true">
+          <img src="/banner.jpg" alt="" />
+        </aside>
 
-        {erro && (
-          <div className="alerta" role="alert">
-            {erro}
-          </div>
-        )}
+        <form className="card auth-card" onSubmit={enviar} noValidate>
+          <img src="/logo.png" alt="Lixo na Rua" className="auth-logo" />
 
-        {isCadastro && (
-          <label className="campo">
-            <span>Nome</span>
-            <input
-              type="text"
-              value={form.nome}
-              onChange={(e) => alterar('nome', e.target.value)}
-              autoComplete="name"
-              placeholder="Maria Silva"
-            />
-            {erroCampo.nome && <small className="erro">{erroCampo.nome}</small>}
-          </label>
-        )}
+          <p className="subtitle">
+            {isCadastro
+              ? 'Crie sua conta para começar a denunciar'
+              : 'Entre para acompanhar suas denúncias'}
+          </p>
 
-        <label className="campo">
-          <span>E-mail</span>
-          <input
-            type="email"
-            value={form.email}
-            onChange={(e) => alterar('email', e.target.value)}
-            autoComplete="email"
-            placeholder="voce@exemplo.com"
-          />
-          {erroCampo.email && <small className="erro">{erroCampo.email}</small>}
-        </label>
-
-        <label className="campo">
-          <span>Senha</span>
-          <input
-            type="password"
-            value={form.password}
-            onChange={(e) => alterar('password', e.target.value)}
-            autoComplete={isCadastro ? 'new-password' : 'current-password'}
-            placeholder={isCadastro ? 'Mínimo 8 caracteres' : ''}
-          />
-          {erroCampo.password && (
-            <small className="erro">{erroCampo.password}</small>
+          {erro && (
+            <div className="alerta" role="alert">
+              {erro}
+            </div>
           )}
-        </label>
 
-        <button type="submit" className="btn" disabled={enviando}>
-          {enviando ? 'Aguarde...' : isCadastro ? 'Criar conta' : 'Entrar'}
-        </button>
+          {isCadastro && (
+            <label className="campo">
+              <span>Nome</span>
+              <input
+                type="text"
+                value={form.nome}
+                onChange={(e) => alterar('nome', e.target.value)}
+                autoComplete="name"
+                placeholder="Maria Silva"
+              />
+              {erroCampo.nome && <small className="erro">{erroCampo.nome}</small>}
+            </label>
+          )}
 
-        <p className="alternar">
-          {isCadastro ? 'Já tem conta?' : 'Ainda não tem conta?'}{' '}
-          <button type="button" className="link" onClick={alternarModo}>
-            {isCadastro ? 'Entrar' : 'Cadastre-se'}
+          <label className="campo">
+            <span>E-mail</span>
+            <input
+              type="email"
+              value={form.email}
+              onChange={(e) => alterar('email', e.target.value)}
+              autoComplete="email"
+              placeholder="voce@exemplo.com"
+            />
+            {erroCampo.email && <small className="erro">{erroCampo.email}</small>}
+          </label>
+
+          <label className="campo">
+            <span>Senha</span>
+            <input
+              type="password"
+              value={form.password}
+              onChange={(e) => alterar('password', e.target.value)}
+              autoComplete={isCadastro ? 'new-password' : 'current-password'}
+              placeholder={isCadastro ? 'Mínimo 8 caracteres' : ''}
+            />
+            {erroCampo.password && (
+              <small className="erro">{erroCampo.password}</small>
+            )}
+          </label>
+
+          <button type="submit" className="btn" disabled={enviando}>
+            {enviando ? 'Aguarde...' : isCadastro ? 'Criar conta' : 'Entrar'}
           </button>
-        </p>
-      </form>
+
+          <p className="alternar">
+            {isCadastro ? 'Já tem conta?' : 'Ainda não tem conta?'}{' '}
+            <button type="button" className="link" onClick={alternarModo}>
+              {isCadastro ? 'Entrar' : 'Cadastre-se'}
+            </button>
+          </p>
+        </form>
+      </div>
     </div>
   );
 }

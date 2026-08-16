@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+
+    # Postgres com PostGIS para os testes de integração, que não rodam
+    # com o banco em memória usado no resto da suíte.
+    services:
+      postgres:
+        image: postgis/postgis:15-3.3
+        env:
+          POSTGRES_DB: lixo_na_rua_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      NODE_ENV: test
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_NAME: lixo_na_rua_test
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      JWT_SECRET: segredo_de_ci_nao_usar_em_producao
+      STORAGE_DRIVER: local
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      # `npm ci` falha se o lockfile estiver dessincronizado do
+      # package.json — é o que garante build reproduzível.
+      - run: npm ci
+
+      - name: Testes unitários
+        run: npm test
+
+      - name: Migrations
+        run: npm run migrate
+
+      - name: Testes de integração (PostGIS)
+        run: npm run test:integration
+
+  web:
+    name: Web
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: web
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - run: npm ci
+
+      - name: Build
+        run: npm run build
+
+  docker:
+    name: Imagem Docker
+    runs-on: ubuntu-latest
+    needs: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Só constrói para confirmar que o Dockerfile está válido.
+      # Publicar no registry entra quando houver ambiente de destino.
+      - name: Build da imagem
+        run: docker build -t lixo-na-rua-backend:ci ./backend
