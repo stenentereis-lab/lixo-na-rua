@@ -12,10 +12,15 @@ const { ApiError, asyncHandler } = require('../utils/errors');
 const {
   validateComplaint,
   validatePagination,
+  validateModeration,
   CATEGORIAS,
   STATUS,
 } = require('../utils/validators');
-const { requireAuth, optionalAuth } = require('../middleware/auth');
+const {
+  requireAuth,
+  optionalAuth,
+  requireRole,
+} = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -168,6 +173,130 @@ router.get(
     }
 
     res.json({ complaint: rows[0] });
+  })
+);
+
+/**
+ * PATCH /complaints/:id  🔒 moderator | admin
+ * Muda o status de uma denúncia e registra quem decidiu.
+ *
+ * @body {string} status - novo status; transições em utils/validators
+ * @body {string} [motivo] - obrigatório quando status = 'rejected'
+ * @returns 200 { complaint } | 400 transição inválida | 403 | 404
+ */
+router.patch(
+  '/:id',
+  requireAuth,
+  requireRole('moderator', 'admin'),
+  asyncHandler(async (req, res) => {
+    if (!UUID_REGEX.test(req.params.id)) {
+      throw new ApiError(400, 'Identificador inválido');
+    }
+
+    const atual = await db.query(
+      'SELECT status FROM complaints WHERE id = $1',
+      [req.params.id]
+    );
+
+    if (atual.rows.length === 0) {
+      throw new ApiError(404, 'Denúncia não encontrada');
+    }
+
+    const statusAntes = atual.rows[0].status;
+    const { status, motivo } = validateModeration(req.body, statusAntes);
+
+    // A mudança e o registro de auditoria precisam acontecer juntos: uma
+    // denúncia com status novo e sem histórico seria uma decisão sem autor.
+    const client = await db.pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      const { rows } = await client.query(
+        `UPDATE complaints SET status = $2 WHERE id = $1
+         RETURNING ${CAMPOS}`,
+        [req.params.id, status]
+      );
+
+      await client.query(
+        `INSERT INTO moderations
+           (complaint_id, moderator_id, status_antes, status_depois, motivo)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [req.params.id, req.user.id, statusAntes, status, motivo]
+      );
+
+      await client.query('COMMIT');
+      res.json({ complaint: rows[0] });
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
+  })
+);
+
+/**
+ * GET /complaints/:id/moderations  🔒 moderator | admin
+ * Histórico de decisões sobre uma denúncia.
+ *
+ * @returns 200 { data } | 400 | 403
+ */
+router.get(
+  '/:id/moderations',
+  requireAuth,
+  requireRole('moderator', 'admin'),
+  asyncHandler(async (req, res) => {
+    if (!UUID_REGEX.test(req.params.id)) {
+      throw new ApiError(400, 'Identificador inválido');
+    }
+
+    const { rows } = await db.query(
+      `SELECT m.id, m.status_antes, m.status_depois, m.motivo, m.created_at,
+              u.nome AS moderador_nome
+         FROM moderations m
+         LEFT JOIN users u ON u.id = m.moderator_id
+        WHERE m.complaint_id = $1
+        ORDER BY m.created_at DESC`,
+      [req.params.id]
+    );
+
+    res.json({ data: rows });
+  })
+);
+
+/**
+ * DELETE /complaints/:id  🔒
+ * Remove uma denúncia. O autor pode remover a própria; admin pode remover
+ * qualquer uma.
+ *
+ * @returns 204 | 400 | 403 | 404
+ */
+router.delete(
+  '/:id',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    if (!UUID_REGEX.test(req.params.id)) {
+      throw new ApiError(400, 'Identificador inválido');
+    }
+
+    const { rows } = await db.query(
+      'SELECT user_id FROM complaints WHERE id = $1',
+      [req.params.id]
+    );
+
+    if (rows.length === 0) {
+      throw new ApiError(404, 'Denúncia não encontrada');
+    }
+
+    const ehDono = rows[0].user_id === req.user.id;
+    const ehAdmin = req.user.role === 'admin';
+
+    if (!ehDono && !ehAdmin) {
+      throw new ApiError(403, 'Você só pode remover suas próprias denúncias');
+    }
+
+    await db.query('DELETE FROM complaints WHERE id = $1', [req.params.id]);
+    res.status(204).end();
   })
 );
 

@@ -60,6 +60,16 @@ function createTestDb() {
       created_at  timestamptz NOT NULL DEFAULT now(),
       updated_at  timestamptz NOT NULL DEFAULT now()
     );
+
+    CREATE TABLE moderations (
+      id            uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+      complaint_id  uuid        NOT NULL REFERENCES complaints(id) ON DELETE CASCADE,
+      moderator_id  uuid        REFERENCES users(id) ON DELETE SET NULL,
+      status_antes  text        NOT NULL,
+      status_depois text        NOT NULL,
+      motivo        text,
+      created_at    timestamptz NOT NULL DEFAULT now()
+    );
   `);
 
   const pg = mem.adapters.createPg();
@@ -70,7 +80,10 @@ function createTestDb() {
     query: (text, params) => pool.query(text, params),
     isHealthy: async () => true,
     /** Esvazia as tabelas entre testes, preservando o schema. */
-    reset: () => mem.public.none('DELETE FROM complaints; DELETE FROM users;'),
+    reset: () =>
+      mem.public.none(
+        'DELETE FROM moderations; DELETE FROM complaints; DELETE FROM users;'
+      ),
   };
 }
 

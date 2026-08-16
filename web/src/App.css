@@ -420,6 +420,112 @@
   color: #0f172a;
 }
 
+/* ---------- fila de moderação ---------- */
+
+.fila {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.item-fila {
+  display: flex;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.item-fila:last-child {
+  border-bottom: none;
+}
+
+.miniatura {
+  width: 110px;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #e2e8f0;
+  flex-shrink: 0;
+}
+
+.item-conteudo {
+  flex: 1;
+  min-width: 0;
+}
+
+.item-conteudo strong {
+  color: #0f172a;
+  font-size: 1rem;
+}
+
+.item-descricao {
+  margin: 4px 0;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.item-meta {
+  margin: 6px 0 10px;
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.item-acoes {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.btn-acao {
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-acao:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-acao.primario {
+  background: #1d4ed8;
+  color: #fff;
+}
+.btn-acao.sucesso {
+  background: #16a34a;
+  color: #fff;
+}
+.btn-acao.perigo {
+  background: #fff;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+.btn-acao.neutro {
+  background: #f1f5f9;
+  color: #334155;
+  border-color: #cbd5e1;
+}
+
+.link-mapa {
+  color: #1d4ed8;
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.link-mapa:hover {
+  text-decoration: underline;
+}
+
+.dica {
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+
 /* ---------- responsivo ---------- */
 
 @media (max-width: 700px) {
@@ -446,5 +552,12 @@
   .mapa-controles select,
   .btn-toggle {
     flex: 1;
+  }
+  .item-fila {
+    flex-direction: column;
+  }
+  .miniatura {
+    width: 100%;
+    height: 160px;
   }
 }

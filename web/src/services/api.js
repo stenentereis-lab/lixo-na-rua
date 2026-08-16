@@ -96,6 +96,26 @@ export const api = {
 
   stats: () => request('/map/stats'),
 
+  /** @param {{status?: string, category?: string, page?: number, limit?: number}} [filtros] */
+  listarDenuncias: (filtros = {}) => {
+    const qs = new URLSearchParams(
+      Object.entries(filtros).filter(([, v]) => v)
+    ).toString();
+    return request(`/complaints${qs ? `?${qs}` : ''}`, { auth: true });
+  },
+
+  /** 🔒 moderador ou admin */
+  moderar: (id, { status, motivo }) =>
+    request(`/complaints/${id}`, {
+      method: 'PATCH',
+      body: { status, motivo },
+      auth: true,
+    }),
+
+  /** 🔒 moderador ou admin */
+  historicoModeracao: (id) =>
+    request(`/complaints/${id}/moderations`, { auth: true }),
+
   register: (dados) => request('/auth/register', { method: 'POST', body: dados }),
 
   login: (credenciais) =>

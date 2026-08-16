@@ -196,15 +196,15 @@ curl http://localhost:3000/auth/me -H "Authorization: Bearer SEU_TOKEN"
 
 ## Papéis de usuário
 
-| Papel       | Pode                                                          |
-| ----------- | ------------------------------------------------------------- |
-| `user`      | Criar denúncias, votar, comentar. Padrão de todo cadastro.     |
-| `moderator` | Tudo do `user` + validar e rejeitar denúncias de terceiros.    |
-| `admin`     | Tudo do `moderator` + gerenciar usuários e órgãos públicos.    |
+| Papel       | Pode                                                                  |
+| ----------- | --------------------------------------------------------------------- |
+| `user`      | Criar denúncias e remover as próprias. Padrão de todo cadastro.        |
+| `moderator` | Tudo do `user` + mudar status de qualquer denúncia e ver o histórico.  |
+| `admin`     | Tudo do `moderator` + remover qualquer denúncia.                      |
 
-> ⚠️ Os papéis existem no banco e o middleware `requireRole` está pronto, mas
-> **nenhuma rota exige papel elevado ainda** — as funcionalidades de moderação
-> chegam na Fase 3. Hoje, ser admin não muda o que você vê no app.
+No web, a aba **Moderação** só aparece para `moderator` e `admin`. Esconder a
+aba é conveniência de interface — o backend valida o papel em toda requisição,
+que é onde o controle de acesso de fato acontece.
 
 ### Promover uma conta
 
@@ -460,13 +460,90 @@ Agregados para o painel. Pública.
 
 ---
 
+### `PATCH /complaints/:id` 🔒 moderator · admin
+
+Muda o status de uma denúncia e registra a decisão.
+
+**Corpo**
+
+```json
+{ "status": "rejected", "motivo": "Local já limpo na visita" }
+```
+
+Transições permitidas:
+
+| De          | Para                      |
+| ----------- | ------------------------- |
+| `reported`  | `validated`, `rejected`   |
+| `validated` | `resolved`, `rejected`    |
+| `rejected`  | `reported` (reabrir)      |
+| `resolved`  | `validated` (lixo voltou) |
+
+**200** `{ complaint }` · **400** transição inválida ou motivo ausente ·
+**403** usuário comum · **404**
+
+> `motivo` é **obrigatório** ao rejeitar — rejeitar sem explicar deixa o
+> cidadão sem saber o que corrigir.
+>
+> Ser autor da denúncia **não** dá poder de moderá-la: senão qualquer um
+> validaria a própria. Há teste cobrindo isso.
+>
+> A mudança de status e o registro de auditoria acontecem na **mesma
+> transação**. Uma denúncia com status novo e sem histórico seria uma
+> decisão sem autor.
+
+---
+
+### `GET /complaints/:id/moderations` 🔒 moderator · admin
+
+Histórico de decisões, da mais recente para a mais antiga.
+
+**200**
+
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "status_antes": "reported",
+      "status_depois": "rejected",
+      "motivo": "Duplicada",
+      "moderador_nome": "Maria Silva",
+      "created_at": "2026-08-16T04:10:00.000Z"
+    }
+  ]
+}
+```
+
+`moderador_nome` vem `null` se a conta do moderador foi removida — a
+decisão permanece registrada de propósito.
+
+---
+
+### `DELETE /complaints/:id` 🔒
+
+Remove uma denúncia.
+
+| Quem       | Pode remover           |
+| ---------- | ---------------------- |
+| autor      | a própria denúncia     |
+| admin      | qualquer denúncia      |
+| moderator  | **não** — só muda status |
+
+**204** sem corpo · **403** denúncia de outra pessoa · **404**
+
+> Moderador não remove de propósito: remoção apaga a trilha, moderação a
+> preserva. São poderes distintos.
+
+---
+
 ## ⏳ Planejado — fases seguintes
 
-| Endpoint                    | Descrição                                          |
-| --------------------------- | -------------------------------------------------- |
-| `PATCH /complaints/:id`     | 🔒 Moderação: mudar status (moderator/admin)        |
-| `POST /complaints/:id/vote` | 🔒 Voto único por usuário, repetir remove           |
-| `GET /complaints/:id/comments` | Comentários                                      |
+| Endpoint                       | Descrição                                  |
+| ------------------------------ | ------------------------------------------ |
+| `POST /complaints/:id/vote`    | 🔒 Voto único por usuário, repetir remove   |
+| `GET /complaints/:id/comments` | Comentários                                |
+| `POST /agencies/:id/export`    | Envio para órgãos públicos                 |
 
 ---
 

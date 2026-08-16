@@ -5,6 +5,78 @@ Cada entrada: contexto, decisão, consequências. Ordem cronológica inversa
 
 ---
 
+## 017 — Remoção separada de moderação
+
+**Data:** 16/08/2026 · **Status:** aceita
+
+### Contexto
+
+Ao definir os poderes de cada papel, a pergunta natural foi: moderador pode
+apagar denúncia?
+
+### Decisão
+
+Não. O moderador muda status; só o autor e o admin removem.
+
+| Ação            | user (autor) | moderator | admin |
+| --------------- | ------------ | --------- | ----- |
+| Mudar status    | não          | sim       | sim   |
+| Remover         | a própria    | não       | sim   |
+
+### Consequências
+
+Rejeitar preserva a denúncia, o motivo e o autor da decisão. Remover apaga
+tudo, inclusive o histórico de moderação (`ON DELETE CASCADE`).
+
+Num app de denúncia contra o poder público, essa diferença importa: se
+moderador pudesse apagar, uma denúncia inconveniente sumiria sem deixar
+rastro. Rejeitando, fica registrado quem rejeitou e por quê.
+
+**Custo:** denúncias rejeitadas se acumulam no banco. Se virar problema de
+volume, o caminho é arquivar — nunca dar permissão de remoção ao moderador.
+
+---
+
+## 016 — Transições de status declaradas explicitamente
+
+**Data:** 16/08/2026 · **Status:** aceita
+
+### Contexto
+
+Com quatro status, um `UPDATE` livre permitiria qualquer combinação —
+inclusive marcar como "resolvida" uma denúncia que ninguém confirmou existir.
+
+### Decisão
+
+Um mapa explícito de transições em `utils/validators.js`:
+
+```js
+reported  → validated, rejected
+validated → resolved, rejected
+rejected  → reported     // reabrir, se a rejeição foi equivocada
+resolved  → validated    // reabrir, se o lixo voltou
+```
+
+Transição fora do mapa devolve 400 com a lista do que é permitido a partir
+do status atual.
+
+### Consequências
+
+**Ganhos** — estados impossíveis viram erro de validação, não dado
+inconsistente; a regra fica num lugar só, legível, em vez de espalhada em
+`if`s; a interface web deriva os botões desse mesmo mapa, então nunca oferece
+uma ação que o backend recusaria.
+
+**Custos** — mudar o fluxo exige tocar o mapa e conferir a interface. É o
+preço de a regra ser explícita, e é barato perto de descobrir em produção que
+metade das denúncias está num estado que ninguém previu.
+
+**Auditoria:** toda transição grava uma linha em `moderations` — status
+anterior, novo, motivo, quem decidiu e quando. As duas operações rodam na
+mesma transação; se a auditoria falhar, a mudança de status é desfeita.
+
+---
+
 ## 015 — Testes de integração separados do `npm test`
 
 **Data:** 16/08/2026 · **Status:** aceita

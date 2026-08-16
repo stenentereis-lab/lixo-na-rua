@@ -4,10 +4,15 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import MapaPage from './MapaPage';
+import ModeracaoPage from './ModeracaoPage';
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
   const [aba, setAba] = useState('mapa');
+
+  // A aba some para quem não pode moderar. Isso é conveniência de
+  // interface: o backend valida o papel de novo em cada requisição.
+  const podeModerar = user.role === 'moderator' || user.role === 'admin';
 
   return (
     <div className="app-wrap">
@@ -28,6 +33,14 @@ export default function DashboardPage() {
         >
           Mapa
         </button>
+        {podeModerar && (
+          <button
+            className={aba === 'moderacao' ? 'ativa' : ''}
+            onClick={() => setAba('moderacao')}
+          >
+            Moderação
+          </button>
+        )}
         <button
           className={aba === 'conta' ? 'ativa' : ''}
           onClick={() => setAba('conta')}
@@ -36,9 +49,9 @@ export default function DashboardPage() {
         </button>
       </nav>
 
-      {aba === 'mapa' ? (
-        <MapaPage />
-      ) : (
+      {aba === 'mapa' && <MapaPage />}
+      {aba === 'moderacao' && podeModerar && <ModeracaoPage />}
+      {aba === 'conta' && (
         <section className="card">
           <h2>Sua conta</h2>
           <dl className="dados">
@@ -47,7 +60,16 @@ export default function DashboardPage() {
             <dt>E-mail</dt>
             <dd>{user.email}</dd>
             <dt>Perfil</dt>
-            <dd>{user.role}</dd>
+            <dd>
+              {user.role}
+              {!podeModerar && (
+                <span className="dica">
+                  {' '}
+                  — para moderar, peça a um admin:{' '}
+                  <code>npm run set-role -- {user.email} moderator</code>
+                </span>
+              )}
+            </dd>
           </dl>
 
           <h2 style={{ marginTop: 24 }}>Próximos passos</h2>
@@ -55,7 +77,7 @@ export default function DashboardPage() {
             <li>✓ Autenticação</li>
             <li>✓ Captura de foto com GPS no app</li>
             <li>✓ Mapa de denúncias</li>
-            <li>Moderação — validar e rejeitar denúncias</li>
+            <li>✓ Moderação</li>
             <li>Integração com órgãos públicos</li>
           </ul>
         </section>

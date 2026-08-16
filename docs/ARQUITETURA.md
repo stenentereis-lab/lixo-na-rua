@@ -68,8 +68,9 @@ API REST em Express.
 | Upload de imagens          | ✅ disco local (ver DECISOES #010)          |
 | Rotas de denúncia          | ✅ criar, listar, detalhe                   |
 | Rotas geográficas          | ✅ nearby, geojson, stats                   |
-| Testes automatizados       | ✅ 83 unitários + integração PostGIS        |
-| Moderação                  | ⏳ Fase 3                                   |
+| Moderação com auditoria    | ✅ PATCH de status + histórico              |
+| Testes automatizados       | ✅ 109 unitários + integração PostGIS       |
+| Integração com órgãos      | ⏳ Fase 4                                   |
 
 ### Organização do backend
 
@@ -78,6 +79,7 @@ backend/
 ├── migrations/
 │   ├── 001_init.sql          users
 │   ├── 002_complaints.sql    complaints + índices + trigger
+│   ├── 003_moderations.sql   trilha de auditoria da moderação
 │   └── run.js                npm run migrate
 ├── scripts/set-role.js       promove conta a moderator/admin
 ├── uploads/                  fotos enviadas (fora do git)
@@ -162,8 +164,14 @@ complaint_votes
 complaint_comments
   id, complaint_id FK, user_id FK, body, created_at
 
-moderations
-  id, complaint_id FK, moderator_id FK, action, reason, created_at
+moderations                             -- ✅ criada na migration 003
+  id             uuid PK
+  complaint_id   uuid FK -> complaints.id  ON DELETE CASCADE
+  moderator_id   uuid FK -> users.id       ON DELETE SET NULL
+  status_antes   text
+  status_depois  text
+  motivo         text
+  created_at     timestamptz
 
 government_agencies
   id, nome, municipio, api_endpoint, api_key

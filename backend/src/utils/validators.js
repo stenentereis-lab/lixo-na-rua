@@ -155,6 +155,75 @@ function validateComplaint(body = {}) {
   };
 }
 
+/**
+ * Transições de status permitidas na moderação.
+ *
+ * Declarar o que pode virar o quê evita estados sem sentido — marcar como
+ * "resolvida" uma denúncia que ninguém confirmou, por exemplo.
+ */
+const TRANSICOES = {
+  reported: ['validated', 'rejected'],
+  validated: ['resolved', 'rejected'],
+  rejected: ['reported'], // reabrir, se a rejeição foi equivocada
+  resolved: ['validated'], // reabrir, se o lixo voltou
+};
+
+const MAX_MOTIVO_LENGTH = 500;
+
+/**
+ * Valida uma decisão de moderação.
+ *
+ * @param {object} body
+ * @param {string} statusAtual - status em que a denúncia está hoje
+ * @returns {{ status: string, motivo: string|null }}
+ * @throws {ApiError} 400 transição inválida ou motivo ausente
+ */
+function validateModeration(body = {}, statusAtual) {
+  const status = String(body.status || '').trim();
+
+  if (!status) {
+    throw new ApiError(400, 'Informe o novo status', {
+      status: 'Campo obrigatório',
+    });
+  }
+
+  if (!STATUS.includes(status)) {
+    throw new ApiError(400, 'Status inválido', {
+      status: `Use um destes: ${STATUS.join(', ')}`,
+    });
+  }
+
+  if (status === statusAtual) {
+    throw new ApiError(400, `A denúncia já está com o status "${status}"`);
+  }
+
+  const permitidos = TRANSICOES[statusAtual] || [];
+  if (!permitidos.includes(status)) {
+    throw new ApiError(
+      400,
+      `Não é possível mudar de "${statusAtual}" para "${status}"`,
+      { status: `A partir de "${statusAtual}", só: ${permitidos.join(', ')}` }
+    );
+  }
+
+  const motivo = String(body.motivo || '').trim();
+
+  // Rejeitar sem explicar deixa o cidadão sem saber o que corrigir.
+  if (status === 'rejected' && !motivo) {
+    throw new ApiError(400, 'Explique o motivo da rejeição', {
+      motivo: 'Obrigatório ao rejeitar uma denúncia',
+    });
+  }
+
+  if (motivo.length > MAX_MOTIVO_LENGTH) {
+    throw new ApiError(400, 'Motivo muito longo', {
+      motivo: `Máximo de ${MAX_MOTIVO_LENGTH} caracteres`,
+    });
+  }
+
+  return { status, motivo: motivo || null };
+}
+
 /** Raio máximo aceito na busca por proximidade, em metros. */
 const RAIO_MAXIMO = 50_000;
 const RAIO_PADRAO = 1_000;
@@ -246,7 +315,9 @@ module.exports = {
   validatePagination,
   validateNearby,
   validateBbox,
+  validateModeration,
   toNumber,
+  TRANSICOES,
   MIN_PASSWORD_LENGTH,
   CATEGORIAS,
   STATUS,

@@ -86,7 +86,11 @@ cd C:\lixo-na-rua\backend
 npm run set-role -- voce@exemplo.com admin
 ```
 
-Saia e entre de novo no app para o token refletir o novo papel. Detalhes em
+Saia e entre de novo no app para o token refletir o novo papel — ele viaja
+dentro do token, que já foi emitido.
+
+A aba **Moderação** passa a aparecer no web, com a fila de denúncias
+aguardando análise. Detalhes em
 [docs/API.md](docs/API.md#papéis-de-usuário).
 
 ## Funcionalidades
@@ -99,7 +103,7 @@ Saia e entre de novo no app para o token refletir o novo papel. Detalhes em
 | Envio e listagem de denúncias    | ✅ pronto   |
 | Mapa, mapa de calor e estatísticas | ✅ pronto   |
 | Busca por proximidade (raio)     | ✅ pronto   |
-| Moderação                        | ⏳ Fase 3   |
+| Moderação com trilha de auditoria | ✅ pronto   |
 | Integração com órgãos públicos   | ⏳ Fase 4   |
 
 ## Variáveis de ambiente
