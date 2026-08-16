@@ -101,7 +101,8 @@ aguardando análise. Detalhes em
 | Sessão persistente (web e mobile) | ✅ pronto   |
 | Captura de foto com GPS (mobile) | ✅ pronto   |
 | Envio e listagem de denúncias    | ✅ pronto   |
-| Mapa, mapa de calor e estatísticas | ✅ pronto   |
+| Mapa no web, com calor e estatísticas | ✅ pronto   |
+| Mapa no app, com denúncias próximas | ✅ pronto   |
 | Busca por proximidade (raio)     | ✅ pronto   |
 | Moderação com trilha de auditoria | ✅ pronto   |
 | Integração com órgãos públicos   | ⏳ Fase 4   |

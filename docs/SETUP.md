@@ -272,6 +272,15 @@ Na ordem:
 4. A URL no rodapé da tela de login está com o IP do PC (`192.168...`) e não
    `localhost`?
 
+### Mapa do app aparece cinza e vazio
+
+No **Expo Go** o mapa funciona sem configuração. Se estiver cinza:
+
+1. Confirme que deu permissão de localização ao app
+2. Confirme que o backend responde — o mapa busca em `/map/nearby`
+3. Se for uma **build própria** para Android, falta a chave do Google Maps
+   — ver [DEPLOY.md](DEPLOY.md#chave-do-google-maps-android)
+
 ### Foto não aparece na lista
 
 As imagens ficam em `backend/uploads/`. Confirme que o arquivo está lá e que
@@ -298,15 +307,40 @@ rode `cd` antes do `npm`. Confira com `pwd`.
 
 PowerShell 5.1. Rode um comando por linha.
 
-### Porta 3000 ocupada
+### Porta ocupada / processo órfão
 
-Backend usa 3000, web usa 3001 (definido em `web/vite.config.js`). Se algo mais
-estiver na 3000:
+Sintomas conhecidos:
+
+| Mensagem                                    | Porta | Serviço |
+| ------------------------------------------- | ----- | ------- |
+| `EADDRINUSE: address already in use :::3000` | 3000  | backend |
+| `Port 8081 is being used by another process` | 8081  | Expo    |
+| `Port 3001 is in use`                        | 3001  | web     |
+
+Todas têm a mesma causa: um processo de sessão anterior continuou vivo depois
+que a janela do terminal foi fechada. Fechar a janela **não** encerra o
+processo filho.
+
+O caso mais traiçoeiro é o backend: ele fica no ar, mas com a conexão do banco
+perdida (por exemplo, o Docker foi desligado no meio). Requisições ficam
+penduradas e o app mostra tempo limite, mesmo com "um backend rodando".
 
 ```powershell
+# descubra o dono da porta — o PID é a última coluna
 netstat -ano | findstr :3000
-taskkill /PID <pid> /F
+
+# derrube
+taskkill /PID <numero> /F
 ```
+
+Para conferir o que está de pé antes de começar:
+
+```powershell
+netstat -ano | findstr "LISTENING" | findstr ":3000 :3001 :8081 :5432"
+```
+
+**Encerre com Ctrl+C** na janela do serviço, em vez de fechar a janela no X.
+Isso evita o problema.
 
 ### npm instala versão inexistente (`No matching version found`)
 

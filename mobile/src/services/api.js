@@ -16,6 +16,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const PORTA_BACKEND = 3000;
 const TOKEN_KEY = 'lixo_na_rua_token';
 
+/**
+ * Tempo limite de cada requisição, em ms.
+ *
+ * Sem isso, o app trava para sempre quando o servidor está inalcançável de
+ * um jeito que descarta pacotes em silêncio — o comportamento padrão de um
+ * firewall. O `fetch` não tem timeout próprio: fica pendurado sem erro.
+ */
+const TIMEOUT = 10000;
+
 /** IP de rede local: 192.168.x.x, 10.x.x.x ou 172.16-31.x.x */
 const IP_LOCAL = /^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/;
 
@@ -97,19 +106,31 @@ async function request(path, { method = 'GET', body, formData, auth = false } = 
     if (token) headers.Authorization = `Bearer ${token}`;
   }
 
+  // AbortController cancela a requisição no tempo limite. Sem ele, um
+  // servidor inalcançável deixaria a promessa pendurada indefinidamente.
+  const controlador = new AbortController();
+  const alarme = setTimeout(() => controlador.abort(), TIMEOUT);
+
   let response;
   try {
     response = await fetch(`${API_URL}${path}`, {
       method,
       headers,
       body: formData || (body ? JSON.stringify(body) : undefined),
+      signal: controlador.signal,
     });
-  } catch {
+  } catch (err) {
+    const expirou = err.name === 'AbortError';
     throw new ApiError(
-      `Não consegui falar com o servidor em ${API_URL}. ` +
-        'Verifique se o backend está rodando e se o celular está no mesmo Wi-Fi.',
+      expirou
+        ? `O servidor em ${API_URL} não respondeu em ${TIMEOUT / 1000}s. ` +
+          'Verifique se o backend está rodando e se a porta 3000 está liberada no firewall.'
+        : `Não consegui falar com o servidor em ${API_URL}. ` +
+          'Verifique se o backend está rodando e se o celular está no mesmo Wi-Fi.',
       0
     );
+  } finally {
+    clearTimeout(alarme);
   }
 
   const isJson = response.headers.get('content-type')?.includes('application/json');
@@ -155,4 +176,14 @@ export const api = {
 
   listarDenuncias: (params = '') =>
     request(`/complaints${params}`, { auth: true }),
+
+  /**
+   * Denúncias num raio a partir de um ponto.
+   * @param {{lat: number, lng: number, radius?: number, category?: string}} p
+   */
+  proximas: ({ lat, lng, radius = 1000, category }) => {
+    const qs = new URLSearchParams({ lat, lng, radius });
+    if (category) qs.set('category', category);
+    return request(`/map/nearby?${qs}`);
+  },
 };

@@ -35,7 +35,7 @@
 | App    | Stack                  | Porta | Situação                                     |
 | ------ | ---------------------- | ----- | -------------------------------------------- |
 | Web    | React 18 + Vite 5      | 3001  | ✅ login, cadastro e área autenticada         |
-| Mobile | React Native + Expo 54 | 8081  | ✅ login, câmera com GPS, histórico           |
+| Mobile | React Native + Expo 54 | 8081  | ✅ login, câmera com GPS, mapa e histórico    |
 | Admin  | —                      | —     | ⏳ pasta criada, sem código                   |
 
 Ambos guardam o token localmente (`localStorage` no web, `AsyncStorage` no
@@ -51,8 +51,13 @@ mobile/
     └── screens/
         ├── LoginScreen.js
         ├── CameraScreen.js   câmera + GPS + envio
+        ├── MapScreen.js      denúncias próximas
         └── HistoryScreen.js
 ```
+
+O app tem três abas: **Denunciar** (câmera), **Por perto** (mapa) e
+**Minhas denúncias**. O mapa consome `GET /map/nearby`, o mesmo endpoint
+que o web usa — nenhuma lógica geográfica foi duplicada no cliente.
 
 ### Aplicação
 

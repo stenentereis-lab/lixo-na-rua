@@ -151,6 +151,47 @@ Os dois códigos distintos permitem que o monitoramento diferencie
 "aplicação caiu" de "banco caiu". O `HEALTHCHECK` do Dockerfile já usa
 esse endpoint.
 
+## Publicar o app mobile
+
+### Chave do Google Maps (Android)
+
+O mapa do app funciona **no Expo Go sem configuração**, porque o próprio
+Expo Go traz a chave do Google. Numa build própria para Android, o mapa
+aparece **cinza e vazio** sem uma chave sua.
+
+1. No Google Cloud Console, ative a **Maps SDK for Android**
+2. Crie uma chave de API e restrinja ao pacote `com.lixonarua.app`
+3. Adicione em `mobile/app.json`:
+
+```json
+"android": {
+  "config": {
+    "googleMaps": { "apiKey": "SUA_CHAVE" }
+  }
+}
+```
+
+No iOS o mapa usa o Apple Maps, que não exige chave.
+
+> A chave fica no `app.json`, que é versionado. Restrinja-a ao pacote do
+> app no console do Google — sem restrição, qualquer um pode usá-la e a
+> cobrança vem para você.
+
+### Build
+
+```bash
+npm install -g eas-cli
+eas login
+eas build --platform android
+```
+
+A URL da API precisa apontar para produção: em build, `hostUri` não
+existe, então defina em `app.json`:
+
+```json
+"extra": { "apiUrl": "https://api.lixonarua.org" }
+```
+
 ## Dívidas conhecidas
 
 | Item                     | Impacto                                                      | Onde       |

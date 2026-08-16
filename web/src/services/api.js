@@ -8,6 +8,15 @@ export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const TOKEN_KEY = 'lixo_na_rua_token';
 
+/**
+ * Tempo limite de cada requisição, em ms.
+ *
+ * O `fetch` não tem timeout próprio. Sem isto, um servidor inalcançável de
+ * um jeito que descarta pacotes em silêncio — comportamento padrão de
+ * firewall — deixaria a tela travada em "carregando" para sempre.
+ */
+const TIMEOUT = 10000;
+
 export const tokenStorage = {
   get: () => localStorage.getItem(TOKEN_KEY),
   set: (token) => localStorage.setItem(TOKEN_KEY, token),
@@ -46,19 +55,28 @@ async function request(path, { method = 'GET', body, auth = false } = {}) {
     if (token) headers.Authorization = `Bearer ${token}`;
   }
 
+  const controlador = new AbortController();
+  const alarme = setTimeout(() => controlador.abort(), TIMEOUT);
+
   let response;
   try {
     response = await fetch(`${API_URL}${path}`, {
       method,
       headers,
       body: body ? JSON.stringify(body) : undefined,
+      signal: controlador.signal,
     });
-  } catch {
-    // fetch só rejeita em falha de rede — servidor fora, DNS, CORS.
+  } catch (err) {
+    // fetch só rejeita em falha de rede — servidor fora, DNS, CORS — ou
+    // quando abortamos por tempo limite.
     throw new ApiError(
-      'Não foi possível falar com o servidor. Ele está rodando?',
+      err.name === 'AbortError'
+        ? `O servidor não respondeu em ${TIMEOUT / 1000}s. Ele está rodando?`
+        : 'Não foi possível falar com o servidor. Ele está rodando?',
       0
     );
+  } finally {
+    clearTimeout(alarme);
   }
 
   const isJson = response.headers
