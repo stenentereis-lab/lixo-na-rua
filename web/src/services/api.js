@@ -4,7 +4,7 @@
  * Centraliza URL base, envio do token e tradução de erro, para que as telas
  * não precisem repetir isso.
  */
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const TOKEN_KEY = 'lixo_na_rua_token';
 
@@ -79,6 +79,22 @@ async function request(path, { method = 'GET', body, auth = false } = {}) {
 
 export const api = {
   health: () => request('/health'),
+
+  /** URL absoluta de uma imagem devolvida pela API. */
+  imagemUrl: (caminho) => (caminho ? `${API_URL}${caminho}` : null),
+
+  /** @param {{bbox?: string, status?: string, category?: string}} [filtros] */
+  geojson: (filtros = {}) => {
+    const qs = new URLSearchParams(
+      Object.entries(filtros).filter(([, v]) => v)
+    ).toString();
+    return request(`/map/geojson${qs ? `?${qs}` : ''}`);
+  },
+
+  nearby: ({ lat, lng, radius = 1000 }) =>
+    request(`/map/nearby?lat=${lat}&lng=${lng}&radius=${radius}`),
+
+  stats: () => request('/map/stats'),
 
   register: (dados) => request('/auth/register', { method: 'POST', body: dados }),
 

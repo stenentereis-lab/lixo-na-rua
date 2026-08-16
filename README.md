@@ -68,6 +68,9 @@ docker compose ps
 # Suíte de testes (não precisa de Docker)
 cd C:\lixo-na-rua\backend
 npm test
+
+# Testes das consultas geográficas (exigem o Postgres de pé)
+npm run test:integration
 ```
 
 Abra http://localhost:3001, crie uma conta e entre. A área autenticada mostra o
@@ -94,7 +97,8 @@ Saia e entre de novo no app para o token refletir o novo papel. Detalhes em
 | Sessão persistente (web e mobile) | ✅ pronto   |
 | Captura de foto com GPS (mobile) | ✅ pronto   |
 | Envio e listagem de denúncias    | ✅ pronto   |
-| Mapa de denúncias                | ⏳ Semana 3 |
+| Mapa, mapa de calor e estatísticas | ✅ pronto   |
+| Busca por proximidade (raio)     | ✅ pronto   |
 | Moderação                        | ⏳ Fase 3   |
 | Integração com órgãos públicos   | ⏳ Fase 4   |
 

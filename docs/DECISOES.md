@@ -5,6 +5,90 @@ Cada entrada: contexto, decisão, consequências. Ordem cronológica inversa
 
 ---
 
+## 015 — Testes de integração separados do `npm test`
+
+**Data:** 16/08/2026 · **Status:** aceita
+
+### Contexto
+
+As rotas de `/map` dependem de `ST_DWithin`, `ST_MakeEnvelope` e
+`ST_Distance`. O pg-mem, que sustenta o resto da suíte, não implementa
+PostGIS — essas queries não têm como ser testadas ali.
+
+Deixá-las sem teste seria pior: são justamente as consultas onde um erro
+silencioso (ordem de coordenada trocada, raio em unidade errada) produz
+resultado plausível mas errado.
+
+### Decisão
+
+Duas camadas:
+
+| Camada      | Onde                    | Roda com               | Precisa de banco |
+| ----------- | ----------------------- | ---------------------- | ---------------- |
+| Unitária    | `tests/*.test.js`       | `npm test`             | não              |
+| Integração  | `tests/integration/`    | `npm run test:integration` | sim (PostGIS) |
+
+`npm test` ignora `tests/integration` explicitamente, então a suíte rápida
+continua rodando em qualquer máquina e no CI sem serviço de banco.
+
+Os testes de integração criam um usuário próprio, inserem pontos a
+distâncias **conhecidas** do centro (100 m, 800 m, 5 km) e apagam tudo no
+`afterAll`. Se o banco não estiver disponível, avisam e passam em vez de
+falhar — falha vermelha por infraestrutura ausente ensina o time a ignorar
+a suíte.
+
+### Consequências
+
+**Ganhos** — cobertura real das queries espaciais, incluindo a checagem de
+que a distância calculada bate com a esperada e de que o GeoJSON sai em
+`[lng, lat]`.
+
+**Custos** — dois comandos em vez de um; os testes de integração só rodam
+se alguém lembrar. Devem entrar no CI como etapa separada, com um serviço
+`postgis/postgis` ao lado.
+
+---
+
+## 014 — Leaflet e OpenStreetMap no lugar do Mapbox
+
+**Data:** 16/08/2026 · **Status:** aceita
+
+### Contexto
+
+O `.env` previa `MAPBOX_TOKEN`, mas o Mapbox exige cadastro, cartão de
+crédito e tem cota mensal. Para um app cívico que pode ter picos de acesso
+imprevisíveis, cota é risco.
+
+### Decisão
+
+**Leaflet** com tiles do **OpenStreetMap**, sem chave de API.
+
+Usamos a biblioteca Leaflet direto, sem `react-leaflet`: é um componente só,
+e controlar o ciclo de vida do mapa na mão evita mais uma dependência com
+exigências próprias de versão do React — problema que já custou tempo neste
+projeto.
+
+### Consequências
+
+**Ganhos** — zero configuração e zero custo; funciona no primeiro `npm
+install`; sem cota para estourar.
+
+**Custos** — os tiles do OSM têm [política de uso
+justo](https://operations.osmfoundation.org/policies/tiles/) e não são para
+produção de alto volume. Antes de escalar, migrar para um provedor de tiles
+(MapTiler, Stadia) ou hospedar os próprios. O contrato do componente não
+muda: só a URL do `tileLayer`.
+
+Marcadores são `circleMarker` em vez do pino padrão porque o pino do Leaflet
+depende de imagens que o bundler não resolve sozinho — problema clássico que
+aparece só no build de produção.
+
+**Segurança:** título e descrição são digitados pelo usuário e vão para o HTML
+do popup. São escapados via `textContent` antes de entrar; sem isso, uma
+denúncia com `<script>` viraria XSS para todo mundo que abrisse o mapa.
+
+---
+
 ## 013 — Mobile no Expo SDK 54
 
 **Data:** 16/08/2026 · **Status:** aceita

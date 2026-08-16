@@ -358,15 +358,115 @@ Lista pública, mais recentes primeiro.
 
 ---
 
+### `GET /map/nearby`
+
+Denúncias dentro de um raio, da mais próxima para a mais distante. Pública.
+
+| Query    | Obrigatório | Padrão | Descrição                     |
+| -------- | ----------- | ------ | ----------------------------- |
+| lat      | sim         | —      | -90 a 90                      |
+| lng      | sim         | —      | -180 a 180                    |
+| radius   | não         | 1000   | metros, máximo 50000          |
+| status   | não         | —      | filtra por status             |
+| category | não         | —      | filtra por categoria          |
+| limit    | não         | 100    | teto de 100                   |
+
+**200**
+
+```json
+{
+  "data": [
+    { "id": "uuid", "title": "Lixo na calçada", "latitude": -15.79,
+      "longitude": -48.01, "distance_meters": 137 }
+  ],
+  "center": { "latitude": -15.7942, "longitude": -48.0192 },
+  "radius": 1000,
+  "total": 1
+}
+```
+
+**400** coordenadas ausentes ou fora do intervalo, raio acima do teto
+
+```powershell
+curl "http://localhost:3000/map/nearby?lat=-15.7942&lng=-48.0192&radius=500"
+```
+
+> Usa `ST_DWithin` sobre `geography`, que calcula em metros e aproveita o
+> índice GIST. Filtrar por `ST_Distance` no `WHERE` funcionaria, mas forçaria
+> varredura completa da tabela.
+
+---
+
+### `GET /map/geojson`
+
+`FeatureCollection` pronta para Leaflet, Mapbox ou OpenLayers. Pública.
+
+| Query    | Padrão | Descrição                              |
+| -------- | ------ | -------------------------------------- |
+| bbox     | —      | `oeste,sul,leste,norte` — só o visível  |
+| status   | —      | filtra por status                      |
+| category | —      | filtra por categoria                   |
+| limit    | 1000   | teto de 5000                           |
+
+**200**
+
+```json
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "uuid",
+      "geometry": { "type": "Point", "coordinates": [-48.0192, -15.7942] },
+      "properties": {
+        "title": "Lixo na calçada",
+        "category": "trash",
+        "status": "reported",
+        "image_url": "/uploads/....jpg",
+        "created_at": "2026-08-16T03:12:00.000Z"
+      }
+    }
+  ]
+}
+```
+
+**400** bbox malformada ou fora dos limites do globo
+
+> ⚠️ GeoJSON usa **`[longitude, latitude]`**, nessa ordem — o inverso do que
+> quase todo mundo escreve. Trocar os dois joga as denúncias de Brasília na
+> Somália. Há teste de integração cobrindo isso.
+
+---
+
+### `GET /map/stats`
+
+Agregados para o painel. Pública.
+
+| Query | Padrão | Descrição                        |
+| ----- | ------ | -------------------------------- |
+| days  | 30     | janela da série, máximo 365      |
+
+**200**
+
+```json
+{
+  "total": 137,
+  "by_status":   [ { "status": "reported", "total": 120 } ],
+  "by_category": [ { "category": "trash", "total": 98 } ],
+  "last_days":   [ { "dia": "2026-08-15", "total": 7 } ],
+  "window_days": 30
+}
+```
+
+---
+
 ## ⏳ Planejado — fases seguintes
 
 | Endpoint                    | Descrição                                          |
 | --------------------------- | -------------------------------------------------- |
-| `GET /map/nearby`           | Denúncias num raio (`ST_DWithin`)                   |
-| `GET /map/geojson`          | `FeatureCollection` para Mapbox / Leaflet           |
 | `PATCH /complaints/:id`     | 🔒 Moderação: mudar status (moderator/admin)        |
 | `POST /complaints/:id/vote` | 🔒 Voto único por usuário, repetir remove           |
-| `GET /stats`                | Totais por status, categoria e série temporal       |
+| `GET /complaints/:id/comments` | Comentários                                      |
 
 ---
 

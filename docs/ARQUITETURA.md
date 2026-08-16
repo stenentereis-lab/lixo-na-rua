@@ -67,7 +67,8 @@ API REST em Express.
 | Limite de tentativas       | ✅ em memória (ver DECISOES #008)           |
 | Upload de imagens          | ✅ disco local (ver DECISOES #010)          |
 | Rotas de denúncia          | ✅ criar, listar, detalhe                   |
-| Testes automatizados       | ✅ 58 testes, sem precisar de Docker        |
+| Rotas geográficas          | ✅ nearby, geojson, stats                   |
+| Testes automatizados       | ✅ 83 unitários + integração PostGIS        |
 | Moderação                  | ⏳ Fase 3                                   |
 
 ### Organização do backend
@@ -92,6 +93,7 @@ backend/
 │   ├── routes/
 │   │   ├── auth.js
 │   │   ├── complaints.js
+│   │   ├── map.js        nearby, geojson, stats
 │   │   └── uploads.js
 │   └── utils/
 │       ├── errors.js     ApiError, asyncHandler
@@ -99,9 +101,15 @@ backend/
 └── tests/
     ├── auth.test.js
     ├── complaints.test.js
+    ├── validators.test.js
     ├── rateLimit.test.js
-    └── helpers/testDb.js  Postgres em memória
+    ├── helpers/testDb.js      Postgres em memória
+    └── integration/map.test.js  exige PostGIS real
 ```
+
+Testes ficam em duas camadas: `npm test` roda os unitários sem banco;
+`npm run test:integration` exige o Postgres com PostGIS de pé. Ver
+DECISOES #015.
 
 `optionalAuth` existe para rotas públicas que mudam de comportamento se houver
 sessão — `GET /complaints?mine=true` é o caso.

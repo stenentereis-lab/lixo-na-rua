@@ -12,6 +12,7 @@ const config = require('./config');
 const db = require('./db');
 const authRoutes = require('./routes/auth');
 const complaintRoutes = require('./routes/complaints');
+const mapRoutes = require('./routes/map');
 const { router: uploadRoutes, UPLOAD_DIR } = require('./routes/uploads');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 const { asyncHandler } = require('./utils/errors');
@@ -54,6 +55,7 @@ app.get(
 
 app.use('/auth', authRoutes);
 app.use('/complaints', complaintRoutes);
+app.use('/map', mapRoutes);
 app.use('/uploads', uploadRoutes);
 
 // Imagens enviadas. `express.static` já barra path traversal.

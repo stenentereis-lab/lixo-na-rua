@@ -9,7 +9,7 @@
 }
 
 .app-wrap {
-  max-width: 720px;
+  max-width: 980px;
   margin: 0 auto;
   padding: 32px 16px 64px;
 }
@@ -230,11 +230,208 @@
   font-weight: 500;
 }
 
+/* ---------- abas ---------- */
+
+.abas {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 18px;
+}
+
+.abas button {
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  color: #cbd5e1;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.abas button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.abas button.ativa {
+  background: #fff;
+  color: #0f172a;
+}
+
+/* ---------- mapa ---------- */
+
+.mapa-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.mapa-topo h2 {
+  margin: 0;
+}
+
+.subtitle-sm {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 0.88rem;
+}
+
+.mapa-controles {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mapa-controles select {
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  color: #0f172a;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.btn-toggle {
+  padding: 8px 14px;
+  border: 1px solid #1d4ed8;
+  border-radius: 8px;
+  background: #fff;
+  color: #1d4ed8;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-toggle.ativo {
+  background: #1d4ed8;
+  color: #fff;
+}
+
+.legenda {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.legenda-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legenda-item i {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.vazio {
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 14px;
+  color: #64748b;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+/* O Leaflet precisa de altura explícita no container. */
+.leaflet-container {
+  border-radius: 12px;
+  font-family: inherit;
+}
+
+/* ---------- números ---------- */
+
+.numero-destaque {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.numero-destaque strong {
+  font-size: 2.4rem;
+  color: #0f172a;
+  line-height: 1;
+}
+
+.numero-destaque span {
+  color: #64748b;
+  font-size: 0.92rem;
+}
+
+.colunas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+}
+
+.colunas h3 {
+  font-size: 0.9rem;
+  color: #475569;
+  margin: 0 0 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.barras {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.barras li {
+  display: grid;
+  grid-template-columns: 90px 1fr 32px;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 9px;
+  font-size: 0.88rem;
+  color: #334155;
+}
+
+.barra {
+  background: #e2e8f0;
+  border-radius: 999px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.barra > div {
+  height: 100%;
+  background: #1d4ed8;
+  border-radius: 999px;
+  min-width: 3px;
+}
+
+.barras strong {
+  text-align: right;
+  color: #0f172a;
+}
+
 /* ---------- responsivo ---------- */
+
+@media (max-width: 700px) {
+  .colunas {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
 
 @media (max-width: 600px) {
   .card {
-    padding: 22px;
+    padding: 20px;
   }
   .card h1,
   .topo h1 {
@@ -242,5 +439,12 @@
   }
   .topo {
     flex-direction: column;
+  }
+  .mapa-controles {
+    width: 100%;
+  }
+  .mapa-controles select,
+  .btn-toggle {
+    flex: 1;
   }
 }

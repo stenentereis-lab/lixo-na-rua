@@ -155,6 +155,76 @@ function validateComplaint(body = {}) {
   };
 }
 
+/** Raio máximo aceito na busca por proximidade, em metros. */
+const RAIO_MAXIMO = 50_000;
+const RAIO_PADRAO = 1_000;
+
+/**
+ * Valida os parâmetros de busca por proximidade.
+ *
+ * @param {object} query
+ * @returns {{ lat: number, lng: number, radius: number }}
+ * @throws {ApiError} 400 com `details` por campo
+ */
+function validateNearby(query = {}) {
+  const errors = {};
+
+  const lat = toNumber(query.lat);
+  if (lat === null) errors.lat = 'Parâmetro lat é obrigatório';
+  else if (lat < -90 || lat > 90) errors.lat = 'lat deve estar entre -90 e 90';
+
+  const lng = toNumber(query.lng);
+  if (lng === null) errors.lng = 'Parâmetro lng é obrigatório';
+  else if (lng < -180 || lng > 180)
+    errors.lng = 'lng deve estar entre -180 e 180';
+
+  const radiusBruto = toNumber(query.radius);
+  const radius = radiusBruto === null ? RAIO_PADRAO : radiusBruto;
+  if (radius <= 0) errors.radius = 'radius deve ser maior que zero';
+  // Teto para não transformar a busca numa varredura da tabela inteira.
+  else if (radius > RAIO_MAXIMO)
+    errors.radius = `radius deve ser no máximo ${RAIO_MAXIMO} metros`;
+
+  if (Object.keys(errors).length > 0) {
+    throw new ApiError(400, 'Parâmetros inválidos', errors);
+  }
+
+  return { lat, lng, radius };
+}
+
+/**
+ * Valida uma caixa delimitadora "oeste,sul,leste,norte" — o formato que os
+ * mapas usam para pedir só o que está visível na tela.
+ *
+ * @param {string} bbox
+ * @returns {{ oeste: number, sul: number, leste: number, norte: number }|null}
+ *   null quando não informada
+ * @throws {ApiError} 400
+ */
+function validateBbox(bbox) {
+  if (!bbox) return null;
+
+  const partes = String(bbox).split(',').map(toNumber);
+
+  if (partes.length !== 4 || partes.some((p) => p === null)) {
+    throw new ApiError(
+      400,
+      'bbox deve ter quatro números: oeste,sul,leste,norte'
+    );
+  }
+
+  const [oeste, sul, leste, norte] = partes;
+
+  if (sul < -90 || norte > 90 || oeste < -180 || leste > 180) {
+    throw new ApiError(400, 'bbox fora dos limites geográficos válidos');
+  }
+  if (sul > norte) {
+    throw new ApiError(400, 'Em bbox, o sul não pode ser maior que o norte');
+  }
+
+  return { oeste, sul, leste, norte };
+}
+
 /**
  * Valida e normaliza parâmetros de paginação.
  *
@@ -174,8 +244,12 @@ module.exports = {
   validateLogin,
   validateComplaint,
   validatePagination,
+  validateNearby,
+  validateBbox,
   toNumber,
   MIN_PASSWORD_LENGTH,
   CATEGORIAS,
   STATUS,
+  RAIO_MAXIMO,
+  RAIO_PADRAO,
 };

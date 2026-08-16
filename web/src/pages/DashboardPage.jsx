@@ -1,20 +1,13 @@
 /**
- * Área autenticada. Por enquanto mostra a sessão e o status dos serviços;
- * é aqui que entram o mapa e as estatísticas nas próximas semanas.
+ * Área autenticada: mapa das denúncias e dados da conta.
  */
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { api } from '../services/api';
+import MapaPage from './MapaPage';
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
-  const [saude, setSaude] = useState(null);
-
-  useEffect(() => {
-    api.health().then(setSaude).catch(() => setSaude({ status: 'ERRO' }));
-  }, []);
-
-  const bancoOk = saude?.database === 'connected';
+  const [aba, setAba] = useState('mapa');
 
   return (
     <div className="app-wrap">
@@ -28,44 +21,45 @@ export default function DashboardPage() {
         </button>
       </header>
 
-      <section className="card">
-        <h2>Sua conta</h2>
-        <dl className="dados">
-          <dt>Nome</dt>
-          <dd>{user.nome}</dd>
-          <dt>E-mail</dt>
-          <dd>{user.email}</dd>
-          <dt>Perfil</dt>
-          <dd>{user.role}</dd>
-        </dl>
-      </section>
+      <nav className="abas">
+        <button
+          className={aba === 'mapa' ? 'ativa' : ''}
+          onClick={() => setAba('mapa')}
+        >
+          Mapa
+        </button>
+        <button
+          className={aba === 'conta' ? 'ativa' : ''}
+          onClick={() => setAba('conta')}
+        >
+          Minha conta
+        </button>
+      </nav>
 
-      <section className="card">
-        <h2>Status dos serviços</h2>
-        <ul className="lista-status">
-          <li>
-            <span className="dot ok" /> Web (React + Vite) — porta 3001
-          </li>
-          <li>
-            <span className={`dot ${saude ? 'ok' : 'checking'}`} /> API (Express)
-            — porta 3000
-          </li>
-          <li>
-            <span className={`dot ${bancoOk ? 'ok' : 'error'}`} /> Banco
-            (PostgreSQL) — {bancoOk ? 'conectado' : 'indisponível'}
-          </li>
-        </ul>
-      </section>
+      {aba === 'mapa' ? (
+        <MapaPage />
+      ) : (
+        <section className="card">
+          <h2>Sua conta</h2>
+          <dl className="dados">
+            <dt>Nome</dt>
+            <dd>{user.nome}</dd>
+            <dt>E-mail</dt>
+            <dd>{user.email}</dd>
+            <dt>Perfil</dt>
+            <dd>{user.role}</dd>
+          </dl>
 
-      <section className="card">
-        <h2>Próximos passos</h2>
-        <ul className="lista-status">
-          <li>✓ Autenticação — concluída</li>
-          <li>Captura de foto com GPS</li>
-          <li>Mapa de denúncias</li>
-          <li>Dashboard de estatísticas</li>
-        </ul>
-      </section>
+          <h2 style={{ marginTop: 24 }}>Próximos passos</h2>
+          <ul className="lista-status">
+            <li>✓ Autenticação</li>
+            <li>✓ Captura de foto com GPS no app</li>
+            <li>✓ Mapa de denúncias</li>
+            <li>Moderação — validar e rejeitar denúncias</li>
+            <li>Integração com órgãos públicos</li>
+          </ul>
+        </section>
+      )}
     </div>
   );
 }
