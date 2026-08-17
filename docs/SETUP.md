@@ -313,21 +313,33 @@ No PowerShell, `curl` é **apelido do `Invoke-WebRequest`**, que tem sintaxe
 diferente. Comandos com `-H` e `-d` falham com
 *"Não é possível associar o parâmetro 'Headers'"*.
 
-Duas saídas:
+**Para POST com corpo JSON, use `Invoke-RestMethod`** — é o caminho que
+funciona sem dor de cabeça:
 
 ```powershell
-# curl de verdade — o .exe evita o apelido
-curl.exe -X POST https://api-lixo.brconsultorias.com/auth/register `
-  -H "Content-Type: application/json" `
-  -d "{\"email\":\"a@b.com\",\"password\":\"senha-forte-123\",\"nome\":\"Teste\"}"
-
-# ou o comando nativo do PowerShell
-Invoke-RestMethod -Uri https://api-lixo.brconsultorias.com/health
+Invoke-RestMethod -Uri https://api-lixo.brconsultorias.com/auth/register `
+  -Method Post -ContentType "application/json" `
+  -Body '{"email":"a@b.com","password":"senha-forte-123","nome":"Teste"}'
 ```
 
-`curl http://localhost:3000/health` funciona sem `.exe` porque é um GET
-simples, sem cabeçalhos — por isso o problema só aparece nos exemplos com
-`-H` e `-d`.
+Note as **aspas simples** no `-Body`: elas impedem o PowerShell de
+interpretar o conteúdo. Com aspas duplas e escapes (`\"`), o PowerShell
+mastiga a string antes de repassar, e a API recebe JSON quebrado
+(`Expected property name or '}' in JSON at position 1`).
+
+`curl.exe` até existe no Windows 10+, mas o escape de aspas no PowerShell é
+uma fonte constante de erro. Evite para POST.
+
+Para GET simples, `curl` funciona normalmente:
+
+```powershell
+curl http://localhost:3000/health
+```
+
+> Erro do `Invoke-RestMethod` com status 4xx aparece como exceção vermelha,
+> não como resposta. `{"error":"Este e-mail já está cadastrado"}` dentro de
+> um `Invoke-RestMethod :` é a API respondendo corretamente — não é falha do
+> comando.
 
 ### Conexão SSH cai sozinha
 
