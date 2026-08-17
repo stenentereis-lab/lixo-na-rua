@@ -106,6 +106,23 @@ S3_PUBLIC_URL=https://fotos-lixo.brconsultorias.com
 > `S3_REGION=auto` é exigência do R2. O `S3_PUBLIC_URL` precisa do domínio
 > conectado: sem ele, o bucket não serve os arquivos publicamente e as fotos
 > não aparecem no app.
+>
+> ⚠️ **Substitua `<account-id>` pelo ID real.** Deixar o texto de exemplo é
+> fácil e o efeito é traiçoeiro: o backend sobe, o login funciona, e só o
+> upload falha — com erro 500 genérico, que não diz nada a quem está na rua
+> tentando denunciar. Aconteceu aqui.
+>
+> Desde então o backend **recusa subir** com valores contendo `<` ou `>`,
+> ou com endpoint que não seja URL válida. Se o container não iniciar,
+> confira os logs: a mensagem diz exatamente qual variável está errada.
+
+Confirme antes de subir:
+
+```bash
+grep -E "^S3_(ENDPOINT|PUBLIC_URL|BUCKET)=" .env.prod
+```
+
+Nenhum valor pode conter `<` ou `>`.
 
 ### Migrar as fotos que já existem
 

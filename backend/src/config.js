@@ -82,6 +82,42 @@ if (module.exports.storage.driver === 's3') {
         .join(', ')}. Veja docs/DEPLOY.md.`
     );
   }
+
+  // Valores de exemplo não substituídos. Sem esta checagem, o backend sobe
+  // normalmente e só quebra no primeiro upload de um usuário real — com
+  // erro 500 genérico, que não diz nada a quem está na rua tentando
+  // denunciar. Aconteceu em produção com <account-id> literal.
+  const comExemplo = Object.entries(module.exports.s3)
+    .filter(([, v]) => typeof v === 'string' && /[<>]/.test(v))
+    .map(([k]) => k);
+
+  if (comExemplo.length > 0) {
+    throw new Error(
+      `Valores de exemplo não substituídos em: ${comExemplo.join(', ')}. ` +
+        'Troque os trechos entre < > pelos valores reais. Veja docs/DEPLOY.md.'
+    );
+  }
+
+  // Endpoint precisa ser URL válida antes de o SDK tentar usá-lo.
+  if (module.exports.s3.endpoint) {
+    try {
+      new URL(module.exports.s3.endpoint);
+    } catch {
+      throw new Error(
+        `S3_ENDPOINT não é uma URL válida: "${module.exports.s3.endpoint}"`
+      );
+    }
+  }
+
+  if (module.exports.s3.publicUrl) {
+    try {
+      new URL(module.exports.s3.publicUrl);
+    } catch {
+      throw new Error(
+        `S3_PUBLIC_URL não é uma URL válida: "${module.exports.s3.publicUrl}"`
+      );
+    }
+  }
 }
 
 if (isProduction && module.exports.storage.driver === 'local') {
