@@ -39,7 +39,6 @@
       },
       "config": {
         "googleMaps": {
-          "//": "Chave embutida no APK por natureza — a protecao e a restricao por pacote e SHA-1 no Google Cloud, nao o sigilo. Ver docs/DEPLOY.md",
           "apiKey": "AIzaSyANWYn2EC9oZGToBwP4FkmusZJokZQMJPE"
         }
       }
