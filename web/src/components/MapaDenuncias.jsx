@@ -14,6 +14,7 @@ import 'leaflet/dist/leaflet.css';
 import 'leaflet.heat';
 
 import { API_URL } from '../services/api';
+import { classificarPrecisao } from '../utils/precisao';
 
 /** Cor de cada categoria, usada nos marcadores e na legenda. */
 export const CORES_CATEGORIA = {
@@ -66,6 +67,7 @@ function montarPopup({ properties: p }) {
     : '';
 
   const data = new Date(p.created_at).toLocaleString('pt-BR');
+  const prec = classificarPrecisao(p.accuracy_meters);
 
   return `
     <div style="min-width:200px;max-width:240px">
@@ -75,6 +77,9 @@ function montarPopup({ properties: p }) {
       <div style="font-size:12px;color:#64748b;margin-top:6px">
         ${ROTULO_CATEGORIA[p.category] || p.category} ·
         ${ROTULO_STATUS[p.status] || p.status}<br/>${data}
+      </div>
+      <div style="font-size:12px;color:${prec.cor};margin-top:4px" title="${escapar(prec.descricao)}">
+        ${prec.rotulo}
       </div>
     </div>
   `;

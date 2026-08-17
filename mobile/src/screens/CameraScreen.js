@@ -123,6 +123,10 @@ export default function CameraScreen({ navigation }) {
         description: descricao.trim() || undefined,
         latitude: local.latitude,
         longitude: local.longitude,
+        // Raio de incerteza do GPS. Distingue "o lixo está neste ponto"
+        // de "está em algum lugar deste quarteirão" — informação que a
+        // moderação e o órgão público precisam para agir.
+        accuracy_meters: local.accuracy ?? undefined,
         category: categoria,
         image_url: url,
       });

@@ -8,6 +8,7 @@
 import { useEffect, useState } from 'react';
 import { api, API_URL } from '../services/api';
 import { ROTULO_CATEGORIA } from '../components/MapaDenuncias';
+import { classificarPrecisao } from '../utils/precisao';
 
 const ROTULO_STATUS = {
   reported: 'Aguardando',
@@ -140,6 +141,17 @@ export default function ModeracaoPage() {
                 {Number(d.latitude).toFixed(5)}, {Number(d.longitude).toFixed(5)} ·{' '}
                 {new Date(d.created_at).toLocaleString('pt-BR')}
               </p>
+
+              {(() => {
+                const p = classificarPrecisao(d.accuracy_meters);
+                return (
+                  <p className="precisao" title={p.descricao}>
+                    <i style={{ background: p.cor }} />
+                    {p.rotulo}
+                    <span className="precisao-desc">{p.descricao}</span>
+                  </p>
+                );
+              })()}
 
               <div className="item-acoes">
                 {(ACOES[d.status] || []).map((acao) => (

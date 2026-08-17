@@ -54,6 +54,7 @@ function createTestDb() {
       description text,
       latitude    double precision NOT NULL CHECK (latitude  BETWEEN  -90 AND  90),
       longitude   double precision NOT NULL CHECK (longitude BETWEEN -180 AND 180),
+      accuracy_meters double precision CHECK (accuracy_meters IS NULL OR accuracy_meters >= 0),
       image_url   text,
       status      text        NOT NULL DEFAULT 'reported',
       category    text        NOT NULL DEFAULT 'trash',

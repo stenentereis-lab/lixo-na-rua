@@ -281,14 +281,23 @@ Registra uma denúncia.
 }
 ```
 
-| Campo       | Regra                                                  |
-| ----------- | ------------------------------------------------------ |
-| title       | obrigatório, até 140 caracteres                        |
-| description | opcional, até 2000 caracteres                          |
-| latitude    | obrigatório, -90 a 90                                  |
-| longitude   | obrigatório, -180 a 180                                |
-| category    | `trash` (padrão) \| `debris` \| `sewage` \| `other`     |
-| image_url   | opcional, normalmente o `url` devolvido por `/uploads`  |
+| Campo           | Regra                                                  |
+| --------------- | ------------------------------------------------------ |
+| title           | obrigatório, até 140 caracteres                        |
+| description     | opcional, até 2000 caracteres                          |
+| latitude        | obrigatório, -90 a 90                                  |
+| longitude       | obrigatório, -180 a 180                                |
+| accuracy_meters | opcional, raio de incerteza do GPS em metros           |
+| category        | `trash` (padrão) \| `debris` \| `sewage` \| `other`     |
+| image_url       | opcional, normalmente o `url` devolvido por `/uploads`  |
+
+> **Por que guardar a precisão.** Uma denúncia com ±1 m aponta o ponto exato
+> do lixo; uma com ±50 m aponta um quarteirão. Para quem modera, ou para o
+> órgão público que recebe a lista, é a diferença entre "está ali" e "está
+> por aqui em algum lugar".
+>
+> O campo é opcional porque o aparelho pode não informar, e porque denúncias
+> criadas antes da migration 004 não têm o dado.
 
 Coordenadas são aceitas como número ou texto — `multipart/form-data` entrega
 tudo como string.
@@ -322,13 +331,17 @@ tudo como string.
 
 Lista pública, mais recentes primeiro.
 
-| Query    | Padrão | Descrição                            |
-| -------- | ------ | ------------------------------------ |
-| page     | 1      | página                               |
-| limit    | 20     | teto de 100                          |
-| status   | —      | filtra por status                    |
-| category | —      | filtra por categoria                 |
-| mine     | —      | `true` devolve só as suas 🔒          |
+| Query        | Padrão | Descrição                                     |
+| ------------ | ------ | --------------------------------------------- |
+| page         | 1      | página                                        |
+| limit        | 20     | teto de 100                                   |
+| status       | —      | filtra por status                             |
+| category     | —      | filtra por categoria                          |
+| mine         | —      | `true` devolve só as suas 🔒                   |
+| max_accuracy | —      | só denúncias com precisão até N metros        |
+
+> `max_accuracy` **exclui denúncias sem o dado**: sem precisão registrada,
+> não dá para afirmar que a coordenada é confiável.
 
 **200**
 

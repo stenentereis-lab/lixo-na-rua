@@ -139,6 +139,11 @@ function validateComplaint(body = {}) {
   if (!CATEGORIAS.includes(category))
     errors.category = `Categoria inválida. Use: ${CATEGORIAS.join(', ')}`;
 
+  // Raio de incerteza do GPS. Opcional: aparelho pode não informar.
+  const accuracy = toNumber(body.accuracy_meters);
+  if (accuracy !== null && accuracy < 0)
+    errors.accuracy_meters = 'Precisão não pode ser negativa';
+
   const imageUrl = String(body.image_url || '').trim();
 
   if (Object.keys(errors).length > 0) {
@@ -150,6 +155,7 @@ function validateComplaint(body = {}) {
     description: description || null,
     latitude,
     longitude,
+    accuracy_meters: accuracy,
     category,
     image_url: imageUrl || null,
   };

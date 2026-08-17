@@ -176,6 +176,37 @@ describe('POST /complaints', () => {
     expect(res.body.details.category).toBeTruthy();
   });
 
+  it('guarda a precisão do GPS quando informada', async () => {
+    const res = await request(app)
+      .post('/complaints')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ ...DENUNCIA, accuracy_meters: 4.7 });
+
+    expect(res.status).toBe(201);
+    expect(res.body.complaint.accuracy_meters).toBe(4.7);
+  });
+
+  it('aceita denúncia sem precisão', async () => {
+    const res = await request(app)
+      .post('/complaints')
+      .set('Authorization', `Bearer ${token}`)
+      .send(DENUNCIA);
+
+    // O aparelho pode não informar; o dado é opcional.
+    expect(res.status).toBe(201);
+    expect(res.body.complaint.accuracy_meters).toBeNull();
+  });
+
+  it('recusa precisão negativa', async () => {
+    const res = await request(app)
+      .post('/complaints')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ ...DENUNCIA, accuracy_meters: -5 });
+
+    expect(res.status).toBe(400);
+    expect(res.body.details.accuracy_meters).toBeTruthy();
+  });
+
   it('recusa denúncia sem coordenadas', async () => {
     const res = await request(app)
       .post('/complaints')
@@ -247,6 +278,36 @@ describe('GET /complaints', () => {
 
     expect(res.body.total).toBe(1);
     expect(res.body.data[0].category).toBe('sewage');
+  });
+
+  it('filtra por precisão máxima', async () => {
+    await request(app)
+      .post('/complaints')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ ...DENUNCIA, title: 'Precisa', accuracy_meters: 3 });
+
+    await request(app)
+      .post('/complaints')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ ...DENUNCIA, title: 'Imprecisa', accuracy_meters: 80 });
+
+    const res = await request(app).get('/complaints?max_accuracy=10');
+
+    const titulos = res.body.data.map((c) => c.title);
+    expect(titulos).toContain('Precisa');
+    expect(titulos).not.toContain('Imprecisa');
+  });
+
+  it('exclui denúncias sem precisão ao filtrar por max_accuracy', async () => {
+    // As três do beforeEach não têm o dado. Sem precisão registrada, não
+    // dá para afirmar que são confiáveis.
+    const res = await request(app).get('/complaints?max_accuracy=1000');
+    expect(res.body.total).toBe(0);
+  });
+
+  it('recusa max_accuracy inválido', async () => {
+    const res = await request(app).get('/complaints?max_accuracy=zero');
+    expect(res.status).toBe(400);
   });
 
   it('recusa filtro de status inválido', async () => {

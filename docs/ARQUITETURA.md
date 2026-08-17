@@ -85,6 +85,7 @@ backend/
 │   ├── 001_init.sql          users
 │   ├── 002_complaints.sql    complaints + índices + trigger
 │   ├── 003_moderations.sql   trilha de auditoria da moderação
+│   ├── 004_accuracy.sql      precisão do GPS na denúncia
 │   └── run.js                npm run migrate
 ├── scripts/set-role.js       promove conta a moderator/admin
 ├── uploads/                  fotos enviadas (fora do git)
@@ -151,9 +152,10 @@ complaints
   user_id        uuid FK -> users.id
   title          text
   description    text
-  latitude       double precision
-  longitude      double precision
-  location_geom  geometry(Point, 4326)   -- PostGIS
+  latitude        double precision
+  longitude       double precision
+  accuracy_meters double precision       -- raio de incerteza do GPS, NULL se desconhecido
+  location_geom   geometry(Point, 4326)  -- PostGIS
   image_url      text
   status         text   -- reported | validated | resolved | rejected
   category       text

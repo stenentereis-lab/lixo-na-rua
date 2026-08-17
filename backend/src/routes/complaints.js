@@ -32,7 +32,7 @@ const router = express.Router();
  */
 const CAMPOS = `
   id, user_id, title, description,
-  latitude, longitude, image_url,
+  latitude, longitude, accuracy_meters, image_url,
   status, category, created_at, updated_at
 `;
 
@@ -63,8 +63,9 @@ router.post(
 
     const { rows } = await db.query(
       `INSERT INTO complaints
-         (user_id, title, description, latitude, longitude, category, image_url)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+         (user_id, title, description, latitude, longitude,
+          accuracy_meters, category, image_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING ${CAMPOS}`,
       [
         req.user.id,
@@ -72,6 +73,7 @@ router.post(
         dados.description,
         dados.latitude,
         dados.longitude,
+        dados.accuracy_meters,
         dados.category,
         dados.image_url,
       ]
@@ -128,6 +130,17 @@ router.get(
       }
       params.push(req.user.id);
       where.push(`user_id = $${params.length}`);
+    }
+
+    // Filtro por confiabilidade da coordenada. Denúncias sem o dado ficam
+    // de fora: não dá para afirmar que são precisas.
+    if (req.query.max_accuracy) {
+      const limite = Number(req.query.max_accuracy);
+      if (!Number.isFinite(limite) || limite <= 0) {
+        throw new ApiError(400, 'max_accuracy deve ser um número maior que zero');
+      }
+      params.push(limite);
+      where.push(`accuracy_meters IS NOT NULL AND accuracy_meters <= $${params.length}`);
     }
 
     const clausula = where.length ? `WHERE ${where.join(' AND ')}` : '';
