@@ -307,6 +307,28 @@ rode `cd` antes do `npm`. Confira com `pwd`.
 
 PowerShell 5.1. Rode um comando por linha.
 
+### `curl` no PowerShell não funciona como esperado
+
+No PowerShell, `curl` é **apelido do `Invoke-WebRequest`**, que tem sintaxe
+diferente. Comandos com `-H` e `-d` falham com
+*"Não é possível associar o parâmetro 'Headers'"*.
+
+Duas saídas:
+
+```powershell
+# curl de verdade — o .exe evita o apelido
+curl.exe -X POST https://api-lixo.brconsultorias.com/auth/register `
+  -H "Content-Type: application/json" `
+  -d "{\"email\":\"a@b.com\",\"password\":\"senha-forte-123\",\"nome\":\"Teste\"}"
+
+# ou o comando nativo do PowerShell
+Invoke-RestMethod -Uri https://api-lixo.brconsultorias.com/health
+```
+
+`curl http://localhost:3000/health` funciona sem `.exe` porque é um GET
+simples, sem cabeçalhos — por isso o problema só aparece nos exemplos com
+`-H` e `-d`.
+
 ### Conexão SSH cai sozinha
 
 Sintoma: `client_loop: send disconnect: Connection reset`, geralmente depois
