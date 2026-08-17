@@ -85,6 +85,31 @@ jobs:
       - name: Build
         run: npm run build
 
+  mobile:
+    name: Mobile
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: mobile
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.0
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - run: npm ci
+
+      - name: Validar configuração e dependências do Expo
+        run: npm run doctor
+
+      - name: Gerar bundle Android
+        run: npm run export:android
+
   docker:
     name: Imagem Docker
     runs-on: ubuntu-latest
