@@ -6,7 +6,7 @@
  * é conveniência de interface, não controle de acesso.
  */
 import { useEffect, useState } from 'react';
-import { api, API_URL } from '../services/api';
+import { api } from '../services/api';
 import { ROTULO_CATEGORIA } from '../components/MapaDenuncias';
 import { classificarPrecisao } from '../utils/precisao';
 
@@ -126,8 +126,8 @@ export default function ModeracaoPage() {
           <li key={d.id} className="item-fila">
             {d.image_url && (
               <img
-                src={`${API_URL}${d.image_url}`}
-                alt=""
+                src={api.imagemUrl(d.image_url)}
+                alt="Foto da denúncia"
                 className="miniatura"
               />
             )}

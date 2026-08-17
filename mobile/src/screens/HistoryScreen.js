@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 
-import { api, API_URL } from '../services/api';
+import { api, imagemUrl } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { cores, espaco, raio, CATEGORIAS } from '../theme';
 
@@ -113,7 +113,7 @@ export default function HistoryScreen() {
             <View style={estilos.cartao}>
               {!!item.image_url && (
                 <Image
-                  source={{ uri: `${API_URL}${item.image_url}` }}
+                  source={{ uri: imagemUrl(item.image_url) }}
                   style={estilos.foto}
                 />
               )}

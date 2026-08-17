@@ -13,7 +13,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.heat';
 
-import { API_URL } from '../services/api';
+import { api } from '../services/api';
 import { classificarPrecisao } from '../utils/precisao';
 
 /** Cor de cada categoria, usada nos marcadores e na legenda. */
@@ -62,8 +62,12 @@ function criarMarcador(feature) {
 
 /** Conteúdo do balão exibido ao clicar num marcador. */
 function montarPopup({ properties: p }) {
+  // onerror esconde a imagem quebrada em vez de deixar um ícone solto —
+  // mas o console registra, para o problema não passar despercebido.
   const imagem = p.image_url
-    ? `<img src="${API_URL}${p.image_url}" alt="" style="width:100%;border-radius:6px;margin-bottom:6px" />`
+    ? `<img src="${api.imagemUrl(p.image_url)}" alt="Foto da denúncia"
+           style="width:100%;border-radius:6px;margin-bottom:6px"
+           onerror="this.style.display='none';console.warn('Falha ao carregar foto:', this.src)" />`
     : '';
 
   const data = new Date(p.created_at).toLocaleString('pt-BR');

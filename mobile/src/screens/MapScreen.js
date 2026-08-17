@@ -24,7 +24,7 @@ import * as Location from 'expo-location';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { api, API_URL } from '../services/api';
+import { api, imagemUrl } from '../services/api';
 import { cores, espaco, raio, CATEGORIAS } from '../theme';
 
 /** Cor de cada categoria, a mesma usada no mapa do web. */
@@ -184,7 +184,7 @@ export default function MapScreen() {
               <View style={estilos.balao}>
                 {!!d.image_url && (
                   <Image
-                    source={{ uri: `${API_URL}${d.image_url}` }}
+                    source={{ uri: imagemUrl(d.image_url) }}
                     style={estilos.balaoFoto}
                   />
                 )}

@@ -146,6 +146,30 @@ do driver local verifica a mesma interface que o S3 implementa.
 **Fica pendente:** migrar as fotos já enviadas em disco para o bucket, e
 reescrever as URLs gravadas no banco. Quanto mais tarde, mais linhas.
 
+### Falha do contrato, encontrada em produção
+
+O contrato dizia que os dois drivers devolvem `url`. Mas o formato difere:
+
+| Driver | `image_url` |
+| --- | --- |
+| local | `/uploads/abc.jpg` — relativo à API |
+| S3/R2 | `https://fotos.../denuncias/abc.jpg` — absoluto |
+
+Os clientes montavam a imagem como `API_URL + image_url`, o que funcionava
+em desenvolvimento e quebrou na primeira foto real em produção.
+
+**A lição não é sobre URL.** É que "mesma interface" precisa incluir o
+**formato do retorno**, não só o nome dos campos. Um contrato que diz "os
+dois devolvem `url`" sem dizer *que tipo de url* não é contrato.
+
+Corrigido com `imagemUrl()` nos dois clientes, que passa adiante o que já
+for absoluto.
+
+**Agravante:** com `alt=""`, imagem quebrada fica invisível no navegador.
+A denúncia aparecia "sem foto", sem erro nenhum. Falha silenciosa é a mais
+cara de achar — por isso agora o `alt` descreve a imagem e há `onerror`
+registrando no console.
+
 ---
 
 ## 017 — Remoção separada de moderação

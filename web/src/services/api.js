@@ -98,8 +98,21 @@ async function request(path, { method = 'GET', body, auth = false } = {}) {
 export const api = {
   health: () => request('/health'),
 
-  /** URL absoluta de uma imagem devolvida pela API. */
-  imagemUrl: (caminho) => (caminho ? `${API_URL}${caminho}` : null),
+  /**
+   * URL exibível de uma imagem devolvida pela API.
+   *
+   * Os dois drivers de armazenamento devolvem formatos diferentes:
+   *   local → "/uploads/abc.jpg"                    (relativo à API)
+   *   S3/R2 → "https://fotos.../denuncias/abc.jpg"  (absoluto)
+   *
+   * Concatenar a base em cima de uma URL absoluta gera endereço inválido
+   * e a imagem some sem erro visível.
+   */
+  imagemUrl: (caminho) => {
+    if (!caminho) return null;
+    if (/^https?:\/\//i.test(caminho)) return caminho;
+    return `${API_URL}${caminho}`;
+  },
 
   /** @param {{bbox?: string, status?: string, category?: string}} [filtros] */
   geojson: (filtros = {}) => {

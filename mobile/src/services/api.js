@@ -179,6 +179,25 @@ async function request(
   return data;
 }
 
+/**
+ * URL exibível de uma imagem devolvida pela API.
+ *
+ * Os dois drivers de armazenamento devolvem formatos diferentes:
+ *   local → "/uploads/abc.jpg"                    (relativo à API)
+ *   S3/R2 → "https://fotos.../denuncias/abc.jpg"  (absoluto)
+ *
+ * Concatenar a base em cima de uma URL absoluta gera endereço inválido e
+ * a imagem simplesmente não carrega.
+ *
+ * @param {string|null} caminho
+ * @returns {string|null}
+ */
+export function imagemUrl(caminho) {
+  if (!caminho) return null;
+  if (/^https?:\/\//i.test(caminho)) return caminho;
+  return `${API_URL}${caminho}`;
+}
+
 export const api = {
   health: () => request('/health'),
 
