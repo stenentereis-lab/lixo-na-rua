@@ -33,7 +33,15 @@ const DENUNCIA = {
 async function criarUsuario(email, role = 'user') {
   const res = await request(app)
     .post('/auth/register')
-    .send({ email, password: 'senha-forte-123', nome: `Teste ${role}` });
+    .send({
+      email,
+      password: 'senha-forte-123',
+      nome: `Teste ${role}`,
+      accepted_terms: true,
+      terms_version: '1.0',
+      acknowledged_privacy: true,
+      privacy_version: '1.0',
+    });
 
   const user = res.body.user;
 

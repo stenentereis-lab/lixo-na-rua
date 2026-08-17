@@ -4,21 +4,21 @@
 
 ## Bloqueadores para publicação
 
-- [ ] advogado brasileiro revisar Termos, Privacidade e Moderação;
+- [x] advogado brasileiro revisar Termos, Privacidade e Moderação;
 - [ ] definir tabela de retenção e descarte, inclusive backups e Cloudflare R2;
 - [ ] avaliar transferência internacional e contratos com Hetzner e Cloudflare;
 - [ ] decidir se o mapa público exibirá coordenada exata ou aproximada;
 - [ ] criar fluxo de solicitação de acesso, correção, exclusão e contestação;
 - [ ] criar procedimento de resposta a incidente de dados;
-- [ ] aprovar versão 1.0 e retirar a marca de minuta dos documentos.
+- [x] aprovar versão 1.0 e retirar a marca de minuta dos documentos.
 
 ## Mudanças no aplicativo
 
-- [ ] mostrar links para Termos e Privacidade antes do cadastro;
-- [ ] exigir caixas separadas para aceite dos Termos e ciência da Privacidade;
-- [ ] não deixar caixas previamente marcadas;
-- [ ] guardar usuário, versão, data e tipo de documento aceito;
-- [ ] exigir novo aceite apenas em alteração relevante;
+- [x] mostrar links para Termos e Privacidade antes do cadastro;
+- [x] exigir caixas separadas para aceite dos Termos e ciência da Privacidade;
+- [x] não deixar caixas previamente marcadas;
+- [x] guardar usuário, versão, data e tipo de documento aceito;
+- [x] exigir novo aceite apenas em alteração relevante;
 - [ ] mostrar, antes de cada envio, declaração curta de autenticidade e cuidado com
   pessoas, placas e propriedades privadas;
 - [ ] disponibilizar os documentos dentro do app sem exigir login;
@@ -55,4 +55,3 @@ Quando houver CNPJ:
 - Lei nº 12.965/2014 — Marco Civil da Internet
 - Resolução CD/ANPD nº 2/2022 — agentes de tratamento de pequeno porte
 - Guias de agentes de tratamento e de segurança para pequeno porte da ANPD
-

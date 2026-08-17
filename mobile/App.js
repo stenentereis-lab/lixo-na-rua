@@ -15,6 +15,7 @@ import LoginScreen from './src/screens/LoginScreen';
 import CameraScreen from './src/screens/CameraScreen';
 import MapScreen from './src/screens/MapScreen';
 import HistoryScreen from './src/screens/HistoryScreen';
+import LegalAcceptanceScreen from './src/screens/LegalAcceptanceScreen';
 import { cores } from './src/theme';
 
 const Tab = createBottomTabNavigator();
@@ -58,7 +59,7 @@ function Abas() {
 }
 
 function Raiz() {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
   const [demorando, setDemorando] = useState(false);
 
   // Depois de alguns segundos, explica o que está acontecendo. Tela parada
@@ -89,7 +90,9 @@ function Raiz() {
     );
   }
 
-  return isAuthenticated ? <Abas /> : <LoginScreen />;
+  if (!isAuthenticated) return <LoginScreen />;
+  if (user.legal_acceptance_required) return <LegalAcceptanceScreen />;
+  return <Abas />;
 }
 
 export default function App() {

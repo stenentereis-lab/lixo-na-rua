@@ -25,7 +25,15 @@ const DENUNCIA = {
 async function criarUsuario(email = 'maria@example.com') {
   const res = await request(app)
     .post('/auth/register')
-    .send({ email, password: 'senha-forte-123', nome: 'Maria Silva' });
+    .send({
+      email,
+      password: 'senha-forte-123',
+      nome: 'Maria Silva',
+      accepted_terms: true,
+      terms_version: '1.0',
+      acknowledged_privacy: true,
+      privacy_version: '1.0',
+    });
   return { token: res.body.token, user: res.body.user };
 }
 

@@ -1,7 +1,7 @@
 # Política de Moderação e Retirada
 
-> **MINUTA PARA REVISÃO JURÍDICA — ainda não vigente**  
-> Versão proposta: 1.0 · Data da minuta: 17/08/2026
+> **Vigente desde 17/08/2026**  
+> Versão: 1.0
 
 ## Objetivo
 
@@ -57,4 +57,3 @@ devem ser encaminhadas imediatamente para orientação jurídica.
 Sempre que a segurança e a lei permitirem, decisões de moderação devem apresentar
 motivo compreensível. Estatísticas futuras devem ser agregadas, sem expor denunciantes
 ou pessoas afetadas.
-

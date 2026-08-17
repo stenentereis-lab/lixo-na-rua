@@ -5,6 +5,7 @@
  * para o usuário, não barreira de segurança — o cliente pode ser burlado.
  */
 const { ApiError } = require('./errors');
+const { validateLegalAcceptance } = require('../legal');
 
 /** Formato de e-mail. Deliberadamente permissivo: a verificação real é o envio. */
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -50,6 +51,8 @@ function validateRegister(body = {}) {
   const nome = String(body.nome || '').trim();
   if (!nome) errors.nome = 'Nome é obrigatório';
   else if (nome.length > MAX_NOME_LENGTH) errors.nome = 'Nome muito longo';
+
+  Object.assign(errors, validateLegalAcceptance(body).errors);
 
   if (Object.keys(errors).length > 0) {
     throw new ApiError(400, 'Dados inválidos', errors);

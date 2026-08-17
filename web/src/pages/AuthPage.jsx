@@ -16,6 +16,8 @@ export default function AuthPage() {
   const [erro, setErro] = useState('');
   const [erroCampo, setErroCampo] = useState({});
   const [enviando, setEnviando] = useState(false);
+  const [aceitouTermos, setAceitouTermos] = useState(false);
+  const [cientePrivacidade, setCientePrivacidade] = useState(false);
 
   const isCadastro = modo === 'cadastro';
 
@@ -39,7 +41,13 @@ export default function AuthPage() {
 
     try {
       if (isCadastro) {
-        await register(form);
+        await register({
+          ...form,
+          accepted_terms: aceitouTermos,
+          terms_version: '1.0',
+          acknowledged_privacy: cientePrivacidade,
+          privacy_version: '1.0',
+        });
       } else {
         await login(form.email, form.password);
       }
@@ -112,6 +120,33 @@ export default function AuthPage() {
               <small className="erro">{erroCampo.password}</small>
             )}
           </label>
+
+          {isCadastro && (
+            <div className="aceites-legais">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={aceitouTermos}
+                  onChange={(e) => setAceitouTermos(e.target.checked)}
+                />{' '}
+                Li e aceito os{' '}
+                <a href="/legal/termos.html" target="_blank" rel="noreferrer">
+                  Termos de Uso (v1.0)
+                </a>.
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={cientePrivacidade}
+                  onChange={(e) => setCientePrivacidade(e.target.checked)}
+                />{' '}
+                Li e estou ciente da{' '}
+                <a href="/legal/privacidade.html" target="_blank" rel="noreferrer">
+                  Política de Privacidade (v1.0)
+                </a>.
+              </label>
+            </div>
+          )}
 
           <button type="submit" className="btn" disabled={enviando}>
             {enviando ? 'Aguarde...' : isCadastro ? 'Criar conta' : 'Entrar'}

@@ -18,6 +18,7 @@ const {
 } = require('../utils/validators');
 const {
   requireAuth,
+  requireLegalAcceptance,
   optionalAuth,
   requireRole,
 } = require('../middleware/auth');
@@ -58,6 +59,7 @@ const UUID_REGEX =
 router.post(
   '/',
   requireAuth,
+  requireLegalAcceptance,
   asyncHandler(async (req, res) => {
     const dados = validateComplaint(req.body);
 
@@ -200,6 +202,7 @@ router.get(
 router.patch(
   '/:id',
   requireAuth,
+  requireLegalAcceptance,
   requireRole('moderator', 'admin'),
   asyncHandler(async (req, res) => {
     if (!UUID_REGEX.test(req.params.id)) {
@@ -257,6 +260,7 @@ router.patch(
 router.get(
   '/:id/moderations',
   requireAuth,
+  requireLegalAcceptance,
   requireRole('moderator', 'admin'),
   asyncHandler(async (req, res) => {
     if (!UUID_REGEX.test(req.params.id)) {
@@ -287,6 +291,7 @@ router.get(
 router.delete(
   '/:id',
   requireAuth,
+  requireLegalAcceptance,
   asyncHandler(async (req, res) => {
     if (!UUID_REGEX.test(req.params.id)) {
       throw new ApiError(400, 'Identificador inválido');

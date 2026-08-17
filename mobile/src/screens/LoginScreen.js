@@ -5,6 +5,7 @@ import { useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   ScrollView,
   StyleSheet,
@@ -26,6 +27,8 @@ export default function LoginScreen() {
   const [erro, setErro] = useState('');
   const [erroCampo, setErroCampo] = useState({});
   const [enviando, setEnviando] = useState(false);
+  const [aceitouTermos, setAceitouTermos] = useState(false);
+  const [cientePrivacidade, setCientePrivacidade] = useState(false);
 
   const isCadastro = modo === 'cadastro';
 
@@ -40,7 +43,15 @@ export default function LoginScreen() {
     setEnviando(true);
 
     try {
-      if (isCadastro) await register(form);
+      if (isCadastro) {
+        await register({
+          ...form,
+          accepted_terms: aceitouTermos,
+          terms_version: '1.0',
+          acknowledged_privacy: cientePrivacidade,
+          privacy_version: '1.0',
+        });
+      }
       else await login(form.email, form.password);
     } catch (err) {
       setErro(err.message);
@@ -111,6 +122,37 @@ export default function LoginScreen() {
           />
           {!!erroCampo.password && (
             <Text style={estilos.erroCampo}>{erroCampo.password}</Text>
+          )}
+
+          {isCadastro && (
+            <View style={estilos.aceites}>
+              <TouchableOpacity
+                style={estilos.aceiteLinha}
+                onPress={() => setAceitouTermos((v) => !v)}
+              >
+                <Text style={estilos.checkbox}>{aceitouTermos ? '☑' : '☐'}</Text>
+                <Text style={estilos.aceiteTexto}>Li e aceito os </Text>
+                <Text
+                  style={estilos.linkLegal}
+                  onPress={() => Linking.openURL('https://lixonarua.brconsultorias.com/legal/termos.html')}
+                >
+                  Termos de Uso (v1.0)
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={estilos.aceiteLinha}
+                onPress={() => setCientePrivacidade((v) => !v)}
+              >
+                <Text style={estilos.checkbox}>{cientePrivacidade ? '☑' : '☐'}</Text>
+                <Text style={estilos.aceiteTexto}>Li e estou ciente da </Text>
+                <Text
+                  style={estilos.linkLegal}
+                  onPress={() => Linking.openURL('https://lixonarua.brconsultorias.com/legal/privacidade.html')}
+                >
+                  Política de Privacidade (v1.0)
+                </Text>
+              </TouchableOpacity>
+            </View>
           )}
 
           <TouchableOpacity
@@ -208,6 +250,11 @@ const estilos = StyleSheet.create({
     marginTop: -espaco.sm,
     marginBottom: espaco.md,
   },
+  aceites: { gap: espaco.sm, marginBottom: espaco.md },
+  aceiteLinha: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' },
+  checkbox: { fontSize: 22, color: cores.primaria, marginRight: espaco.xs },
+  aceiteTexto: { color: cores.texto, fontSize: 13 },
+  linkLegal: { color: cores.primaria, fontSize: 13, fontWeight: '700' },
 
   botao: {
     backgroundColor: cores.primaria,

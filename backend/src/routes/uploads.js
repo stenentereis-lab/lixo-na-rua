@@ -10,7 +10,7 @@ const multer = require('multer');
 const config = require('../config');
 const storage = require('../storage');
 const { ApiError, asyncHandler } = require('../utils/errors');
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, requireLegalAcceptance } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -72,6 +72,7 @@ function tratarUpload(req, res, next) {
 router.post(
   '/',
   requireAuth,
+  requireLegalAcceptance,
   tratarUpload,
   asyncHandler(async (req, res) => {
     if (!req.file) {

@@ -46,6 +46,12 @@ export function AuthProvider({ children }) {
     return user;
   }
 
+  async function acceptLegal(dados) {
+    const { user } = await api.acceptLegal(dados);
+    setUser(user);
+    return user;
+  }
+
   function logout() {
     tokenStorage.clear();
     setUser(null);
@@ -53,7 +59,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, register, logout, isAuthenticated: !!user }}
+      value={{ user, loading, login, register, acceptLegal, logout, isAuthenticated: !!user }}
     >
       {children}
     </AuthContext.Provider>

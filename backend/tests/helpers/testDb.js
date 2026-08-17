@@ -71,6 +71,15 @@ function createTestDb() {
       motivo        text,
       created_at    timestamptz NOT NULL DEFAULT now()
     );
+
+    CREATE TABLE legal_acceptances (
+      id            uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id       uuid        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      document_type text        NOT NULL,
+      version       text        NOT NULL,
+      accepted_at   timestamptz NOT NULL DEFAULT now(),
+      UNIQUE (user_id, document_type, version)
+    );
   `);
 
   const pg = mem.adapters.createPg();
@@ -83,7 +92,7 @@ function createTestDb() {
     /** Esvazia as tabelas entre testes, preservando o schema. */
     reset: () =>
       mem.public.none(
-        'DELETE FROM moderations; DELETE FROM complaints; DELETE FROM users;'
+        'DELETE FROM legal_acceptances; DELETE FROM moderations; DELETE FROM complaints; DELETE FROM users;'
       ),
   };
 }

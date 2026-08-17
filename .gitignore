@@ -19,6 +19,7 @@ Thumbs.db
 *~
 dist/
 build/
+web/public/legal/
 
 # Fotos enviadas pelos usuarios (armazenamento local do MVP)
 backend/uploads/

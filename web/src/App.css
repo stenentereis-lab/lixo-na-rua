@@ -619,3 +619,23 @@
     height: 160px;
   }
 }
+.aceites-legais {
+  display: grid;
+  gap: 10px;
+  margin: 4px 0 14px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.aceites-legais a,
+.legal-gate a { color: #3d7a16; }
+
+.legal-gate {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: #f8faf7;
+}
+
+.legal-gate form { display: grid; gap: 16px; max-width: 560px; }

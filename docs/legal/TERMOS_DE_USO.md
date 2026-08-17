@@ -1,7 +1,7 @@
 # Termos de Uso do Lixo na Rua
 
-> **MINUTA PARA REVISÃO JURÍDICA — ainda não vigente**  
-> Versão proposta: 1.0 · Data da minuta: 17/08/2026
+> **Vigente desde 17/08/2026**  
+> Versão: 1.0
 
 ## 1. Quem oferece o aplicativo
 
@@ -110,4 +110,3 @@ aceite. O aplicativo guardará a versão e a data da concordância.
 
 Aplicam-se as leis da República Federativa do Brasil. Eventuais conflitos observarão
 o foro legalmente competente, sem limitar direitos assegurados ao usuário.
-

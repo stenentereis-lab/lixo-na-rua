@@ -1,7 +1,7 @@
 # Política de Privacidade do Lixo na Rua
 
-> **MINUTA PARA REVISÃO JURÍDICA — ainda não vigente**  
-> Versão proposta: 1.0 · Data da minuta: 17/08/2026
+> **Vigente desde 17/08/2026**  
+> Versão: 1.0
 
 ## 1. Controlador e contato
 
@@ -54,10 +54,9 @@ Podem ser exibidos publicamente a fotografia, o título, a descrição, a catego
 o status, a data e o ponto geográfico do relato. **Nome, e-mail, senha e identidade
 do autor não devem aparecer no mapa público.**
 
-A localização exata pode revelar informação sobre imóveis ou pessoas. Antes da
-vigência desta Política, o controlador deverá avaliar tecnicamente quando o mapa
-público deve usar coordenada aproximada, mantendo a coordenada exata apenas para
-moderação e encaminhamento a autoridades.
+A localização exata pode revelar informação sobre imóveis ou pessoas. O controlador
+avaliará continuamente quando o mapa público deve usar coordenada aproximada,
+mantendo a coordenada exata apenas para moderação e encaminhamento a autoridades.
 
 ## 5. Compartilhamento e operadores
 
@@ -69,9 +68,9 @@ Dados são tratados por fornecedores necessários à operação, atualmente incl
 - autoridades e entidades competentes, quando houver solicitação válida, base legal
   ou encaminhamento compatível com a finalidade do relato.
 
-Os fornecedores podem processar dados fora do Brasil. Antes da entrada em vigor,
-devem ser verificados localização, contratos, salvaguardas de transferência
-internacional, prazos e mecanismos de exclusão de cada serviço.
+Os fornecedores podem processar dados fora do Brasil. Localização, contratos,
+salvaguardas de transferência internacional, prazos e mecanismos de exclusão serão
+mantidos sob revisão pelo controlador.
 
 O Lixo na Rua não vende dados pessoais.
 
@@ -79,9 +78,8 @@ O Lixo na Rua não vende dados pessoais.
 
 Os dados serão mantidos somente pelo tempo necessário à finalidade informada,
 incluindo períodos indispensáveis para segurança, cumprimento legal e exercício de
-direitos. Antes da vigência desta Política, deverá ser aprovada e implementada uma
-tabela interna de retenção que cubra contas, relatos, fotografias, aceitações,
-atendimentos, logs e backups.
+direitos. Uma tabela interna de retenção cobrirá contas, relatos, fotografias,
+aceitações, atendimentos, logs e backups.
 
 Quando cabível, a exclusão da conta removerá ou anonimizará os dados associados.
 Algumas informações poderão ser preservadas de forma restrita para cumprir dever
@@ -124,4 +122,3 @@ coleta em segundo plano.
 
 A versão e a data desta Política serão apresentadas no aplicativo. Mudanças
 relevantes serão informadas de maneira destacada e poderão exigir novo aceite.
-

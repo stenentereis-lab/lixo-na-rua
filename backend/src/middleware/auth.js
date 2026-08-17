@@ -4,6 +4,8 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config');
 const { ApiError } = require('../utils/errors');
+const db = require('../db');
+const { hasCurrentAcceptance } = require('../legal');
 
 /**
  * Gera o token de acesso de um usuário.
@@ -94,4 +96,26 @@ function requireRole(...roles) {
   };
 }
 
-module.exports = { generateToken, requireAuth, optionalAuth, requireRole };
+/** Impede uso autenticado enquanto os documentos vigentes não forem aceitos. */
+async function requireLegalAcceptance(req, res, next) {
+  try {
+    if (!req.user || !(await hasCurrentAcceptance(db, req.user.id))) {
+      return next(
+        new ApiError(403, 'Aceite os Termos de Uso e a Política de Privacidade para continuar', {
+          legal_acceptance_required: true,
+        })
+      );
+    }
+    next();
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = {
+  generateToken,
+  requireAuth,
+  optionalAuth,
+  requireRole,
+  requireLegalAcceptance,
+};

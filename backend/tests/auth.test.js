@@ -24,6 +24,10 @@ const VALID_USER = {
   email: 'maria@example.com',
   password: 'senha-forte-123',
   nome: 'Maria Silva',
+  accepted_terms: true,
+  terms_version: '1.0',
+  acknowledged_privacy: true,
+  privacy_version: '1.0',
 };
 
 beforeEach(() => {
@@ -42,6 +46,7 @@ describe('POST /auth/register', () => {
     });
     expect(res.body.user.id).toBeTruthy();
     expect(typeof res.body.token).toBe('string');
+    expect(res.body.user.legal_acceptance_required).toBe(false);
   });
 
   it('nunca devolve o hash da senha', async () => {
@@ -101,10 +106,41 @@ describe('POST /auth/register', () => {
 
     expect(res.status).toBe(400);
     expect(Object.keys(res.body.details).sort()).toEqual([
+      'accepted_terms',
+      'acknowledged_privacy',
       'email',
       'nome',
       'password',
+      'privacy_version',
+      'terms_version',
     ]);
+  });
+
+  it('recusa cadastro sem os aceites jurídicos', async () => {
+    const res = await request(app).post('/auth/register').send({
+      email: VALID_USER.email,
+      password: VALID_USER.password,
+      nome: VALID_USER.nome,
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.body.details.accepted_terms).toBeTruthy();
+    expect(res.body.details.acknowledged_privacy).toBeTruthy();
+  });
+
+  it('grava documento, versão e data de cada aceite', async () => {
+    const res = await request(app).post('/auth/register').send(VALID_USER);
+    const { rows } = await testDb.query(
+      'SELECT document_type, version, accepted_at FROM legal_acceptances WHERE user_id = $1 ORDER BY document_type',
+      [res.body.user.id]
+    );
+
+    expect(rows).toHaveLength(2);
+    expect(rows.map((row) => [row.document_type, row.version])).toEqual([
+      ['privacy', '1.0'],
+      ['terms', '1.0'],
+    ]);
+    expect(rows.every((row) => row.accepted_at)).toBe(true);
   });
 
   it('não permite escolher o próprio papel (escalada de privilégio)', async () => {
@@ -242,6 +278,56 @@ describe('GET /auth/me', () => {
       .set('Authorization', `Bearer ${forjado}`);
 
     expect(res.status).toBe(401);
+  });
+});
+
+describe('POST /auth/legal-acceptance', () => {
+  it('exige aceite de conta antiga antes de usar rotas protegidas', async () => {
+    const cadastro = await request(app).post('/auth/register').send(VALID_USER);
+    await testDb.query('DELETE FROM legal_acceptances WHERE user_id = $1', [
+      cadastro.body.user.id,
+    ]);
+
+    const login = await request(app).post('/auth/login').send({
+      email: VALID_USER.email,
+      password: VALID_USER.password,
+    });
+    expect(login.body.user.legal_acceptance_required).toBe(true);
+
+    const bloqueada = await request(app)
+      .post('/complaints')
+      .set('Authorization', `Bearer ${login.body.token}`)
+      .send({ title: 'Teste', latitude: -20, longitude: -54 });
+    expect(bloqueada.status).toBe(403);
+    expect(bloqueada.body.details.legal_acceptance_required).toBe(true);
+
+    const aceite = await request(app)
+      .post('/auth/legal-acceptance')
+      .set('Authorization', `Bearer ${login.body.token}`)
+      .send({
+        accepted_terms: true,
+        terms_version: '1.0',
+        acknowledged_privacy: true,
+        privacy_version: '1.0',
+      });
+    expect(aceite.status).toBe(200);
+    expect(aceite.body.user.legal_acceptance_required).toBe(false);
+  });
+
+  it('recusa versão antiga ou caixa não marcada', async () => {
+    const cadastro = await request(app).post('/auth/register').send(VALID_USER);
+    const res = await request(app)
+      .post('/auth/legal-acceptance')
+      .set('Authorization', `Bearer ${cadastro.body.token}`)
+      .send({
+        accepted_terms: true,
+        terms_version: '0.9',
+        acknowledged_privacy: false,
+        privacy_version: '1.0',
+      });
+    expect(res.status).toBe(400);
+    expect(res.body.details.terms_version).toBeTruthy();
+    expect(res.body.details.acknowledged_privacy).toBeTruthy();
   });
 });
 

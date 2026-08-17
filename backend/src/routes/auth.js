@@ -14,11 +14,28 @@ const { ApiError, asyncHandler } = require('../utils/errors');
 const { validateRegister, validateLogin } = require('../utils/validators');
 const { generateToken, requireAuth } = require('../middleware/auth');
 const { rateLimit } = require('../middleware/rateLimit');
+const {
+  LEGAL_DOCUMENTS,
+  validateLegalAcceptance,
+  hasCurrentAcceptance,
+  recordCurrentAcceptance,
+} = require('../legal');
 
 const router = express.Router();
 
 /** Campos do usuário que podem sair na resposta. Nunca inclui password_hash. */
 const PUBLIC_FIELDS = 'id, email, nome, role, created_at';
+
+async function addLegalStatus(client, user) {
+  return {
+    ...user,
+    legal_acceptance_required: !(await hasCurrentAcceptance(client, user.id)),
+    legal_versions: {
+      terms: LEGAL_DOCUMENTS.terms.version,
+      privacy: LEGAL_DOCUMENTS.privacy.version,
+    },
+  };
+}
 
 /**
  * POST /auth/register
@@ -38,25 +55,31 @@ router.post(
 
     const passwordHash = await bcrypt.hash(password, config.bcryptRounds);
 
-    let result;
+    const client = await db.pool.connect();
     try {
-      result = await db.query(
+      await client.query('BEGIN');
+      const result = await client.query(
         `INSERT INTO users (email, password_hash, nome)
          VALUES ($1, $2, $3)
          RETURNING ${PUBLIC_FIELDS}`,
         [email, passwordHash, nome]
       );
+      await recordCurrentAcceptance(client, result.rows[0].id);
+      await client.query('COMMIT');
+
+      const user = await addLegalStatus(client, result.rows[0]);
+      res.status(201).json({ user, token: generateToken(user) });
     } catch (err) {
+      await client.query('ROLLBACK');
       // 23505 = unique_violation. Deixar o banco decidir evita a condição de
       // corrida que existiria em "SELECT antes, INSERT depois".
       if (err.code === '23505' || /unique/i.test(err.message || '')) {
         throw new ApiError(409, 'Este e-mail já está cadastrado');
       }
       throw err;
+    } finally {
+      client.release();
     }
-
-    const user = result.rows[0];
-    res.status(201).json({ user, token: generateToken(user) });
   })
 );
 
@@ -88,7 +111,8 @@ router.post(
     }
 
     delete user.password_hash;
-    res.json({ user, token: generateToken(user) });
+    const userWithLegalStatus = await addLegalStatus(db, user);
+    res.json({ user: userWithLegalStatus, token: generateToken(user) });
   })
 );
 
@@ -112,7 +136,28 @@ router.get(
       throw new ApiError(404, 'Usuário não encontrado');
     }
 
-    res.json({ user: rows[0] });
+    res.json({ user: await addLegalStatus(db, rows[0]) });
+  })
+);
+
+/** Registra o aceite vigente para contas criadas antes dos documentos. */
+router.post(
+  '/legal-acceptance',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const { errors } = validateLegalAcceptance(req.body);
+    if (Object.keys(errors).length) {
+      throw new ApiError(400, 'É necessário aceitar os documentos vigentes', errors);
+    }
+
+    await recordCurrentAcceptance(db, req.user.id);
+    const { rows } = await db.query(
+      `SELECT ${PUBLIC_FIELDS} FROM users WHERE id = $1`,
+      [req.user.id]
+    );
+    if (!rows.length) throw new ApiError(404, 'Usuário não encontrado');
+
+    res.json({ user: await addLegalStatus(db, rows[0]) });
   })
 );
 

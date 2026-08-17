@@ -202,6 +202,8 @@ export const api = {
   health: () => request('/health'),
 
   register: (dados) => request('/auth/register', { method: 'POST', body: dados }),
+  acceptLegal: (dados) =>
+    request('/auth/legal-acceptance', { method: 'POST', body: dados, auth: true }),
 
   login: (credenciais) => request('/auth/login', { method: 'POST', body: credenciais }),
 
