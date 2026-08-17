@@ -334,16 +334,16 @@ mkdir -p ~/backups
 ls -lh ~/backups
 ```
 
-Agendar para as 3h da manhã:
+Agendar para as 3h da manhã sem apagar outras tarefas que já estejam no
+`crontab`:
 
 ```bash
-crontab -e
-```
-
-Em vez de editar no nano, instale com um comando — é mais confiável:
-
-```bash
-echo "0 3 * * * /home/lixo/lixo-na-rua/scripts/backup.sh >> /home/lixo/backups/backup.log 2>&1" | crontab -
+JOB='0 3 * * * /home/lixo/lixo-na-rua/scripts/backup.sh >> /home/lixo/backups/backup.log 2>&1'
+CRON_TMP="$(mktemp)"
+crontab -l > "$CRON_TMP" 2>/dev/null || true
+grep -qxF "$JOB" "$CRON_TMP" || printf '%s\n' "$JOB" >> "$CRON_TMP"
+crontab "$CRON_TMP"
+rm -f "$CRON_TMP"
 ```
 
 Confira **sempre**:
@@ -352,12 +352,9 @@ Confira **sempre**:
 crontab -l
 ```
 
-Deve mostrar **uma linha**, terminando em `2>&1`, sem nada grudado depois.
-
-> Editar o crontab no nano é a origem de um erro silencioso comum: se a
-> linha for colada no início do arquivo, ela gruda no primeiro comentário
-> (`...2>&1# Edit this file to introduce tasks...`) e o cron falha toda
-> madrugada sem avisar. O `echo | crontab -` não tem esse risco.
+Deve mostrar a tarefa de backup terminando em `2>&1`, além de quaisquer tarefas
+que já existiam. O procedimento é idempotente: executá-lo novamente não duplica
+a mesma linha.
 
 O script mantém 30 dias e apaga os mais antigos. Ele também **descarta
 backups menores que 1 KB**: um `pg_dump` que falha no meio produz um `.gz`
@@ -370,8 +367,12 @@ substituiria silenciosamente os bons.
 ./scripts/restaurar.sh ~/backups/db-2026-08-16-0300.sql.gz
 ```
 
-Para o backend, restaura e sobe de novo. Pede confirmação digitada, porque
-substitui os dados atuais.
+O script primeiro verifica a integridade do gzip e restaura o conteúdo em um
+banco temporário. Somente depois de uma importação completa ele para o backend,
+troca os bancos e volta a subir o serviço. Se o backend não iniciar, tenta
+recolocar o banco anterior. O banco anterior só é removido depois que o endpoint
+`/health` volta a responder com sucesso. Pede confirmação digitada porque, ao
+concluir com sucesso, substitui os dados atuais.
 
 **Backup que nunca foi restaurado não é backup, é esperança.** Teste a
 restauração antes de precisar dela — de preferência num servidor

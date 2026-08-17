@@ -154,7 +154,7 @@ Rode a suíte de testes — ela não precisa de Docker nem de banco:
 ```powershell
 cd C:\lixo-na-rua\backend
 npm test
-# Tests: 27 passed
+# A quantidade cresce com o projeto; o importante é não haver falhas.
 ```
 
 Por fim, abra http://localhost:3001, crie uma conta e entre. A área autenticada

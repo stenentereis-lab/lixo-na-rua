@@ -25,6 +25,8 @@ backend/uploads/
 .expo/
 *.apk
 *.ipa
+*.jks
+*.keystore
 *.log
 logs/
 tmp/

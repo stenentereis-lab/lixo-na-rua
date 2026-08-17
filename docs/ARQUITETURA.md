@@ -134,9 +134,11 @@ sem ocupar porta.
 
 PostgreSQL 15 com extensão PostGIS 3.3, via Docker Compose.
 
-## Modelo de dados (planejado)
+## Modelo de dados
 
-Ainda **não existem migrations**. Este é o desenho alvo:
+As migrations `001` a `004` implementam `users`, `complaints`, `moderations`,
+a geometria PostGIS e a precisão do GPS. As tabelas marcadas como planejadas
+abaixo ainda não existem:
 
 ```
 users
@@ -161,14 +163,14 @@ complaints
   category       text
   created_at     timestamptz
 
-complaint_votes
+complaint_votes                         -- planejada
   id             uuid PK
   complaint_id   uuid FK
   user_id        uuid FK
   vote_type      text   -- like | unlike
   UNIQUE (complaint_id, user_id)
 
-complaint_comments
+complaint_comments                      -- planejada
   id, complaint_id FK, user_id FK, body, created_at
 
 moderations                             -- ✅ criada na migration 003
@@ -180,10 +182,10 @@ moderations                             -- ✅ criada na migration 003
   motivo         text
   created_at     timestamptz
 
-government_agencies
+government_agencies                     -- planejada
   id, nome, municipio, api_endpoint, api_key
 
-agency_access_log
+agency_access_log                       -- planejada
   id, agency_id FK, complaint_id FK, accessed_at
 ```
 
