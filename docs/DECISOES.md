@@ -5,6 +5,77 @@ Cada entrada: contexto, decisão, consequências. Ordem cronológica inversa
 
 ---
 
+## 021 — Aceite jurídico versionado e direitos atendidos por canal humano
+
+**Data:** 17/08/2026 · **Status:** aceita, com revisões pendentes
+
+### Contexto
+
+Termos de Uso, Política de Privacidade e Política de Moderação passaram a
+reger um serviço que recebe conta, fotografia e coordenada exata. Um booleano
+`aceitou_termos` não provaria **qual texto** foi aceito e um aviso apenas na
+interface seria contornável por versão antiga do aplicativo.
+
+A LGPD assegura confirmação, acesso, correção, portabilidade, oposição e
+eliminação nas hipóteses cabíveis. Ela exige canal facilitado e atendimento,
+mas não determina que cada direito tenha endpoint automático. O projeto já
+publica o canal `regiolireis@gmail.com`; automação é melhoria de produto, não
+substituta da análise de identidade, base legal e dever de conservação.
+
+O art. 15 do Marco Civil prevê seis meses de registros de acesso para provedor
+constituído como pessoa jurídica que atue de forma organizada, profissional e
+com fins econômicos. A operação atual é de pessoa natural e a futura operação
+pretendida é por ONG. Não se presumiu esse enquadramento nem se iniciou coleta
+de IP sem definição jurídica, finalidade, segurança e descarte.
+
+### Decisão
+
+1. Guardar em `legal_acceptances` o usuário, tipo de documento, versão e data.
+2. Exigir caixas separadas e desmarcadas para Termos e Privacidade.
+3. Bloquear no backend upload, denúncia, moderação e exclusão enquanto faltar
+   a versão vigente; não confiar apenas na interface.
+4. Atender direitos do titular inicialmente pelo e-mail publicado, com ação
+   manual e registro do pedido.
+5. Não criar retenção geral de IP por seis meses até advogado confirmar o
+   enquadramento atual e o da futura ONG. Ordem de preservação específica deve
+   ser encaminhada imediatamente para orientação jurídica.
+
+### Alternativas consideradas
+
+**Booleano no usuário** — mais simples, mas perde histórico e não permite
+distinguir versões. Rejeitado.
+
+**Aviso sem bloqueio na API** — mantém compatibilidade com app antigo, mas
+permite uso sem aceite por chamada direta. Rejeitado.
+
+**Endpoints automáticos imediatos para todos os direitos** — melhor experiência,
+mas exclusão não é um simples `DELETE`: hoje apagaria denúncias em cascata e
+deixaria fotografias órfãs no R2, além de poder destruir dado que precise ser
+preservado. Adiado até existir política de anonimização, retenção e confirmação
+de identidade.
+
+**Guardar todo acesso por seis meses desde já** — poderia ajudar auditoria, mas
+cria uma nova base de dados pessoais, custo de proteção e risco de retenção
+excessiva sem enquadramento confirmado. Adiado.
+
+### Consequências e ações
+
+**Ganhos** — prova auditável do aceite, versões antigas bloqueadas no servidor
+e textos acessíveis antes do cadastro.
+
+**Custos** — toda nova versão relevante exige atualizar constantes, publicar os
+textos e pedir novo aceite. Usuários antigos precisam instalar a versão que
+contém a tela de regularização.
+
+- [ ] criar fluxo interno para registrar e acompanhar pedidos recebidos por e-mail;
+- [ ] definir anonimização versus exclusão de denúncias e remoção das fotos no R2;
+- [ ] depois disso, implementar exportação, correção e encerramento de conta;
+- [ ] obter parecer sobre o art. 15 para a operação atual e para a futura ONG;
+- [ ] se aplicável, implantar log de acesso sob sigilo, controle de acesso,
+  integridade, prazo de seis meses e descarte automático.
+
+---
+
 ## 020 — Cloudflare Tunnel no lugar de portas abertas
 
 **Data:** 16/08/2026 · **Status:** aceita
