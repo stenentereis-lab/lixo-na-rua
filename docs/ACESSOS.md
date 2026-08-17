@@ -31,7 +31,8 @@ coisa e **não deve ser tocado**.
 | Token do Tunnel | mesmo arquivo | crie túnel novo; muda a configuração de hostname |
 | Chave do Google Maps | `mobile/app.json`, versionada | crie outra e restrinja ao pacote + SHA-1 |
 | **Keystore do Android** | **conta Expo** | 🔴 **irrecuperável** — ver abaixo |
-| Chave SSH do servidor | `~/.ssh/id_ed25519` no PC do Reginaldo, com passphrase | ver "Perdi o acesso ao servidor" |
+| Chave SSH local | `~/.ssh/id_ed25519` no PC do Reginaldo, com passphrase | em 17/08/2026 o servidor atual não aceitou essa chave; autorização pendente |
+| Senha de root para o console | redefinível no painel da Hetzner | serve como acesso de recuperação pelo console web; não habilitar login SSH por senha |
 
 O `.env.prod` **não** está no repositório, de propósito. Ele existe em um
 lugar só: dentro do servidor. Vale ter uma cópia num gerenciador de senhas.
@@ -105,11 +106,26 @@ que houver denúncias de cidadãos reais esperando resposta.
 
 ### Perdi o acesso ao servidor (chave SSH ou passphrase)
 
-O painel do Hetzner permite entrar sem SSH:
+Quando o servidor é criado com uma chave SSH, a Hetzner não envia senha de
+`root`. A senha pode ser criada ou redefinida no painel para uso no console web:
 
 1. **console.hetzner.cloud** → servidor `lixo-na-rua`
-2. **Rescue** → ativar modo de recuperação, ou usar o **Console** web
-3. Pelo console, adicione uma chave nova em `/home/lixo/.ssh/authorized_keys`
+2. **Rescue** → seção **Root Password** → **Reset Root Password**
+3. Copie a senha exibida e guarde-a no gerenciador de senhas
+4. Volte a **Overview** e abra o botão **`>_`** no canto superior direito
+5. Entre no console com usuário `root` e a senha gerada — a senha não aparece
+   enquanto é digitada
+6. Adicione uma chave pública nova em `/home/lixo/.ssh/authorized_keys`
+7. Confirme o acesso com `ssh lixo@89.167.52.78` antes de fechar o console
+
+Não é necessário ativar **Enable rescue & power cycle** para apenas redefinir a
+senha. Não habilite `PasswordAuthentication` nem `PermitRootLogin yes` no SSH:
+a senha de `root` deve permanecer como caminho de recuperação pelo console da
+Hetzner, enquanto o acesso remoto diário continua usando chave.
+
+Se a redefinição e o console não resolverem, aí sim use o modo Rescue para
+montar o disco e corrigir `authorized_keys`. Esse procedimento reinicia o
+servidor e deve ser tratado como manutenção planejada.
 
 Enquanto isso o app continua funcionando: os containers têm
 `restart: unless-stopped` e não dependem de ninguém estar conectado.
