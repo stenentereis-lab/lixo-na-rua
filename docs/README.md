@@ -10,6 +10,10 @@
 | [MARCA.md](MARCA.md)                 | Paleta, ícones e regras de uso da identidade visual             |
 | [DECISOES.md](DECISOES.md)           | Por que a stack é essa — decisões e seus custos                 |
 | [CONTRIBUINDO.md](CONTRIBUINDO.md)   | Padrões de commit, código e segurança                           |
+| [legal/TERMOS_DE_USO.md](legal/TERMOS_DE_USO.md) | Minuta dos Termos de Uso                         |
+| [legal/POLITICA_DE_PRIVACIDADE.md](legal/POLITICA_DE_PRIVACIDADE.md) | Minuta de privacidade            |
+| [legal/POLITICA_DE_MODERACAO.md](legal/POLITICA_DE_MODERACAO.md) | Minuta de moderação e retirada       |
+| [legal/CHECKLIST_DE_ADEQUACAO.md](legal/CHECKLIST_DE_ADEQUACAO.md) | Pendências antes da vigência     |
 
 O [README da raiz](../README.md) tem o resumo rápido: portas, comandos e
 verificação.
