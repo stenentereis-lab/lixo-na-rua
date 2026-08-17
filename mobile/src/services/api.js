@@ -17,13 +17,19 @@ const PORTA_BACKEND = 3000;
 const TOKEN_KEY = 'lixo_na_rua_token';
 
 /**
- * Tempo limite de cada requisição, em ms.
+ * Tempo limite das requisições, em ms.
  *
  * Sem isso, o app trava para sempre quando o servidor está inalcançável de
  * um jeito que descarta pacotes em silêncio — o comportamento padrão de um
  * firewall. O `fetch` não tem timeout próprio: fica pendurado sem erro.
+ *
+ * Upload tem limite muito maior: uma foto de alguns megabytes saindo de um
+ * celular em rede móvel até um servidor na Europa passa de 10s com
+ * facilidade. Usar o mesmo limite do login fazia toda denúncia falhar em
+ * conexão lenta — que é justamente a situação de quem está na rua.
  */
-const TIMEOUT = 10000;
+const TIMEOUT = 15000;
+const TIMEOUT_UPLOAD = 120000;
 
 /** IP de rede local: 192.168.x.x, 10.x.x.x ou 172.16-31.x.x */
 const IP_LOCAL = /^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/;
@@ -102,7 +108,12 @@ export class ApiError extends Error {
  * @returns {Promise<object>}
  * @throws {ApiError}
  */
-async function request(path, { method = 'GET', body, formData, auth = false } = {}) {
+async function request(
+  path,
+  { method = 'GET', body, formData, auth = false } = {}
+) {
+  // Envio de arquivo ganha muito mais tempo que uma chamada comum.
+  const limite = formData ? TIMEOUT_UPLOAD : TIMEOUT;
   const headers = {};
 
   if (body) headers['Content-Type'] = 'application/json';
@@ -117,7 +128,7 @@ async function request(path, { method = 'GET', body, formData, auth = false } = 
   // AbortController cancela a requisição no tempo limite. Sem ele, um
   // servidor inalcançável deixaria a promessa pendurada indefinidamente.
   const controlador = new AbortController();
-  const alarme = setTimeout(() => controlador.abort(), TIMEOUT);
+  const alarme = setTimeout(() => controlador.abort(), limite);
 
   let response;
   try {
@@ -129,14 +140,27 @@ async function request(path, { method = 'GET', body, formData, auth = false } = 
     });
   } catch (err) {
     const expirou = err.name === 'AbortError';
-    throw new ApiError(
-      expirou
-        ? `O servidor em ${API_URL} não respondeu em ${TIMEOUT / 1000}s. ` +
+    // Em produção o usuário é um cidadão na rua: dizer "verifique a porta
+    // 3000 no firewall" não ajuda ninguém. Mensagem de desenvolvimento só
+    // aparece quando a API é local.
+    const ehProducao = API_URL.startsWith('https://');
+
+    let mensagem;
+    if (ehProducao) {
+      mensagem = expirou
+        ? formData
+          ? 'O envio da foto demorou demais. Tente de novo com um sinal melhor — sua foto continua salva aqui.'
+          : 'O servidor demorou para responder. Verifique sua conexão e tente de novo.'
+        : 'Não foi possível conectar. Verifique sua internet e tente de novo.';
+    } else {
+      mensagem = expirou
+        ? `O servidor em ${API_URL} não respondeu em ${limite / 1000}s. ` +
           'Verifique se o backend está rodando e se a porta 3000 está liberada no firewall.'
         : `Não consegui falar com o servidor em ${API_URL}. ` +
-          'Verifique se o backend está rodando e se o celular está no mesmo Wi-Fi.',
-      0
-    );
+          'Verifique se o backend está rodando e se o celular está no mesmo Wi-Fi.';
+    }
+
+    throw new ApiError(mensagem, 0);
   } finally {
     clearTimeout(alarme);
   }
