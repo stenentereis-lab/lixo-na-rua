@@ -14,7 +14,9 @@ import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const PORTA_BACKEND = 3000;
-const TOKEN_KEY = 'lixo_na_rua_token';
+const TOKEN_KEY = Constants.expoConfig?.extra?.beta
+  ? 'lixo_na_rua_beta_token'
+  : 'lixo_na_rua_token';
 
 /**
  * Tempo limite das requisições, em ms.
@@ -45,7 +47,7 @@ function descobrirApiUrl() {
   const configurada = Constants.expoConfig?.extra?.apiUrl;
 
   // Em desenvolvimento, o IP da máquina do Metro tem prioridade: é lá que
-  // o backend local roda. Sem isso, ter apiUrl de produção no app.json
+  // o backend local roda. Sem isso, ter apiUrl de produção no app.config.js
   // impediria testar qualquer mudança do backend sem publicá-la antes.
   const hostUri =
     Constants.expoConfig?.hostUri || Constants.manifest?.debuggerHost || '';

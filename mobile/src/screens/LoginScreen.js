@@ -189,7 +189,7 @@ export default function LoginScreen() {
               </Text>
               <Text style={estilos.avisoConfigTexto}>
                 O app vai tentar {API_URL}, que num celular aponta para o
-                próprio aparelho. Abra mobile/app.json e defina
+                próprio aparelho. Abra mobile/app.config.js e defina
                 {' "extra": { "apiUrl": "http://SEU_IP:3000" }'}.
               </Text>
             </View>

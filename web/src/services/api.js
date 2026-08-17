@@ -96,6 +96,7 @@ async function request(path, { method = 'GET', body, auth = false } = {}) {
 }
 
 export const api = {
+  betaSignup: (dados) => request('/beta-signups', { method: 'POST', body: dados }),
   health: () => request('/health'),
 
   /**

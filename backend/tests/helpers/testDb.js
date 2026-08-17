@@ -80,6 +80,21 @@ function createTestDb() {
       accepted_at   timestamptz NOT NULL DEFAULT now(),
       UNIQUE (user_id, document_type, version)
     );
+
+    CREATE TABLE beta_signups (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      nome text NOT NULL,
+      email text NOT NULL UNIQUE,
+      cidade text NOT NULL,
+      uf text NOT NULL,
+      aparelho text NOT NULL,
+      android_version text NOT NULL,
+      age_confirmed boolean NOT NULL,
+      terms_version text NOT NULL,
+      privacy_version text NOT NULL,
+      status text NOT NULL DEFAULT 'pending',
+      created_at timestamptz NOT NULL DEFAULT now()
+    );
   `);
 
   const pg = mem.adapters.createPg();
@@ -92,7 +107,7 @@ function createTestDb() {
     /** Esvazia as tabelas entre testes, preservando o schema. */
     reset: () =>
       mem.public.none(
-        'DELETE FROM legal_acceptances; DELETE FROM moderations; DELETE FROM complaints; DELETE FROM users;'
+        'DELETE FROM beta_signups; DELETE FROM legal_acceptances; DELETE FROM moderations; DELETE FROM complaints; DELETE FROM users;'
       ),
   };
 }

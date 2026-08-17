@@ -29,7 +29,7 @@ coisa e **não deve ser tocado**.
 | Senha do Postgres | mesmo arquivo | recuperável: está no `.env.prod` e no container |
 | Credenciais do R2 | mesmo arquivo | crie token novo no painel da Cloudflare |
 | Token do Tunnel | mesmo arquivo | crie túnel novo; muda a configuração de hostname |
-| Chave do Google Maps | `mobile/app.json`, versionada | crie outra e restrinja ao pacote + SHA-1 |
+| Chave do Google Maps | `mobile/app.config.js`, versionada | crie outra e restrinja ao pacote + SHA-1 |
 | **Keystore do Android** | **conta Expo** | 🔴 **irrecuperável** — ver abaixo |
 | Chave SSH local | `~/.ssh/id_ed25519` no PC do Reginaldo, com passphrase | em 17/08/2026 o servidor atual não aceitou essa chave; autorização pendente |
 | Senha de root para o console | redefinível no painel da Hetzner | serve como acesso de recuperação pelo console web; não habilitar login SSH por senha |

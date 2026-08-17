@@ -13,6 +13,7 @@ const db = require('./db');
 const authRoutes = require('./routes/auth');
 const complaintRoutes = require('./routes/complaints');
 const mapRoutes = require('./routes/map');
+const betaRoutes = require('./routes/beta');
 const { router: uploadRoutes } = require('./routes/uploads');
 const storage = require('./storage');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
@@ -57,6 +58,7 @@ app.get(
 app.use('/auth', authRoutes);
 app.use('/complaints', complaintRoutes);
 app.use('/map', mapRoutes);
+app.use('/beta-signups', betaRoutes);
 app.use('/uploads', uploadRoutes);
 
 // Servir arquivos só faz sentido no driver local. Com S3, as imagens são

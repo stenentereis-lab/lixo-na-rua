@@ -258,7 +258,7 @@ e reinicie o backend.
 
 ## 6. App mobile
 
-Já configurado em `mobile/app.json`:
+Já configurado em `mobile/app.config.js`:
 
 ```json
 "extra": { "apiUrl": "https://api-lixo.brconsultorias.com" }
@@ -285,7 +285,7 @@ eas build --platform android
 No **Expo Go** o mapa funciona sem configuração, porque o próprio Expo Go
 traz a chave. Numa build sua, o mapa fica **cinza e vazio** sem uma chave.
 
-Já configurada em `mobile/app.json` → `android.config.googleMaps.apiKey`.
+Já configurada em `mobile/app.config.js` → `android.config.googleMaps.apiKey`.
 
 **Por que ela fica num arquivo versionado.** Uma chave do Maps para Android
 é embutida no APK por natureza — qualquer pessoa que baixe o app consegue

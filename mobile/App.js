@@ -9,6 +9,7 @@ import { ActivityIndicator, Image, StyleSheet, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import Constants from 'expo-constants';
 
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import LoginScreen from './src/screens/LoginScreen';
@@ -96,12 +97,20 @@ function Raiz() {
 }
 
 export default function App() {
+  const beta = Constants.expoConfig?.extra?.beta === true;
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <NavigationContainer>
-          <Raiz />
-        </NavigationContainer>
+        <View style={{ flex: 1 }}>
+          {beta && (
+            <View style={estilos.betaBanner}>
+              <Text style={estilos.betaTexto}>VERSÃO DE TESTE — NÃO É DENÚNCIA OFICIAL</Text>
+            </View>
+          )}
+          <NavigationContainer>
+            <Raiz />
+          </NavigationContainer>
+        </View>
       </AuthProvider>
     </SafeAreaProvider>
   );
@@ -129,4 +138,6 @@ const estilos = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 19,
   },
+  betaBanner: { backgroundColor: '#facc15', paddingVertical: 7, paddingHorizontal: 10 },
+  betaTexto: { color: '#3f2f00', textAlign: 'center', fontSize: 11, fontWeight: '800' },
 });

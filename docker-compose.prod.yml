@@ -63,6 +63,36 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  # Ambiente comunitário isolado: outro banco e volume de fotos. O mesmo
+  # túnel alcança este serviço pelo nome backend-beta:3000.
+  backend-beta:
+    build:
+      context: ./backend
+    container_name: lixo_api_beta
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${BETA_DB_NAME:-lixo_na_rua_beta}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${BETA_JWT_SECRET}
+      JWT_EXPIRY: ${JWT_EXPIRY:-7d}
+      CORS_ORIGIN: https://lixonarua.brconsultorias.com
+      STORAGE_DRIVER: local
+    volumes:
+      - beta_uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'node', '-e', 'fetch("http://127.0.0.1:3000/health").then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
   tunnel:
     image: cloudflare/cloudflared:latest
     container_name: lixo_tunnel
@@ -75,3 +105,4 @@ services:
 
 volumes:
   postgres_data:
+  beta_uploads:

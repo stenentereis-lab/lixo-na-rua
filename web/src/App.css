@@ -639,3 +639,14 @@
 }
 
 .legal-gate form { display: grid; gap: 16px; max-width: 560px; }
+.beta-page { min-height: 100vh; max-width: 980px; margin: auto; padding: 40px 20px; display: grid; grid-template-columns: 1fr 430px; gap: 32px; align-items: start; }
+.beta-hero { color: #fff; padding-top: 24px; }
+.beta-hero.card { color: #1f2937; grid-column: 1 / -1; }
+.beta-hero img { width: 240px; max-width: 70%; filter: brightness(0) invert(1); }
+.beta-hero h1 { font-size: clamp(2rem, 5vw, 3.4rem); line-height: 1.05; margin: 22px 0 16px; }
+.beta-hero p, .beta-hero li { font-size: 1.05rem; line-height: 1.6; }
+.beta-badge { display: inline-block; margin-top: 22px; padding: 7px 12px; border-radius: 999px; background: #facc15; color: #3f2f00; font-weight: 800; font-size: .78rem; }
+.beta-form { margin: 0; }
+.beta-check { display: block; margin: 13px 0; color: #334155; line-height: 1.4; }
+.beta-check a { color: #3d7a16; font-weight: 700; }
+@media (max-width: 760px) { .beta-page { grid-template-columns: 1fr; padding-top: 20px; } .beta-hero { padding-top: 0; } }

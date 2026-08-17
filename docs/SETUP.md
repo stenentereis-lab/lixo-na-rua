@@ -219,7 +219,7 @@ npx expo start --tunnel
 
 O túnel resolve o carregamento do app, **mas não o acesso ao backend** — o
 endereço vira `.exp.direct`, que não serve para achar sua máquina. Nesse caso
-defina o IP manualmente em `mobile/app.json`:
+defina o IP manualmente em `mobile/app.config.js`:
 
 ```json
 {

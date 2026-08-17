@@ -11,6 +11,13 @@
     "preview": {
       "distribution": "internal"
     },
+    "community": {
+      "distribution": "internal",
+      "env": {
+        "APP_VARIANT": "beta",
+        "BETA_API_URL": "https://api-teste-lixo.brconsultorias.com"
+      }
+    },
     "production": {
       "autoIncrement": true
     }

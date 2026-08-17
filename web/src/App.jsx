@@ -2,6 +2,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import AuthPage from './pages/AuthPage';
 import DashboardPage from './pages/DashboardPage';
 import LegalAcceptancePage from './pages/LegalAcceptancePage';
+import BetaPage from './pages/BetaPage';
 import './App.css';
 
 /**
@@ -27,6 +28,7 @@ function Rotas() {
 }
 
 export default function App() {
+  if (window.location.pathname.replace(/\/$/, '') === '/beta') return <BetaPage />;
   return (
     <AuthProvider>
       <Rotas />

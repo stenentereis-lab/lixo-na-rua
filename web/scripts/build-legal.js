@@ -5,6 +5,7 @@ const documents = [
   ['TERMOS_DE_USO.md', 'termos.html'],
   ['POLITICA_DE_PRIVACIDADE.md', 'privacidade.html'],
   ['POLITICA_DE_MODERACAO.md', 'moderacao.html'],
+  ['TERMO_DE_TESTADOR_BETA.md', 'termo-beta.html'],
 ];
 
 const sourceDir = path.resolve('..', 'docs', 'legal');

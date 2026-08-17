@@ -491,7 +491,7 @@ nova no time.
 Derivar o endereço do `Constants.expoConfig.hostUri`, que o Expo já preenche
 com o IP da máquina do Metro, trocando a porta para 3000.
 
-Permanece possível sobrescrever via `app.json > extra.apiUrl`, para o caso do
+Permanece possível sobrescrever via `app.config.js > extra.apiUrl`, para o caso do
 backend não estar na mesma máquina.
 
 ### Consequências
