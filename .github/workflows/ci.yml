@@ -104,6 +104,9 @@ jobs:
 
       - run: npm ci
 
+      - name: Testes de precisão do GPS
+        run: npm test
+
       - name: Validar configuração e dependências do Expo
         run: npm run doctor
 

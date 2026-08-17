@@ -25,12 +25,19 @@ import {
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Location from 'expo-location';
+import { useIsFocused } from '@react-navigation/native';
 
 import { api } from '../services/api';
 import { cores, espaco, raio, CATEGORIAS } from '../theme';
+const {
+  PRECISAO_MAXIMA_METROS,
+  avaliarLocalizacao,
+} = require('../utils/precisaoGps.cjs');
 
 export default function CameraScreen({ navigation }) {
   const cameraRef = useRef(null);
+  const assinaturaLocalRef = useRef(null);
+  const telaAtiva = useIsFocused();
 
   // Hook do expo-camera 17: devolve o estado da permissão e a função
   // que a solicita, sem precisar controlar isso na mão.
@@ -45,17 +52,44 @@ export default function CameraScreen({ navigation }) {
   const [categoria, setCategoria] = useState('trash');
 
   const [enviando, setEnviando] = useState(false);
+  const [aferindo, setAferindo] = useState(false);
 
   useEffect(() => {
-    pedirPermissoes();
-  }, []);
+    if (telaAtiva) pedirPermissoes();
+    else pararRastreamento();
+    return () => pararRastreamento();
+  }, [telaAtiva]);
+
+  function guardarLocalizacao(posicao) {
+    const leitura = { ...posicao.coords, timestamp: posicao.timestamp };
+    setLocal(leitura);
+    setErroLocal('');
+  }
+
+  function pararRastreamento() {
+    assinaturaLocalRef.current?.remove();
+    assinaturaLocalRef.current = null;
+  }
+
+  async function iniciarRastreamento() {
+    pararRastreamento();
+    assinaturaLocalRef.current = await Location.watchPositionAsync(
+      {
+        accuracy: Location.Accuracy.BestForNavigation,
+        timeInterval: 1000,
+        distanceInterval: 0,
+        mayShowUserSettingsDialog: true,
+      },
+      guardarLocalizacao,
+      () => setErroLocal('Não consegui atualizar sua localização')
+    );
+  }
 
   async function pedirPermissoes() {
     if (!permissaoCamera?.granted) {
       await pedirPermissaoCamera();
     }
 
-    // Localização em paralelo: quando a foto sair, a coordenada já estará lá.
     const loc = await Location.requestForegroundPermissionsAsync();
     if (loc.status !== 'granted') {
       setErroLocal('Sem permissão de localização');
@@ -63,38 +97,63 @@ export default function CameraScreen({ navigation }) {
     }
 
     try {
+      await iniciarRastreamento();
       const posicao = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
+        accuracy: Location.Accuracy.BestForNavigation,
       });
-      setLocal(posicao.coords);
+      guardarLocalizacao(posicao);
     } catch {
       setErroLocal('Não consegui obter sua localização');
     }
   }
 
   async function tirarFoto() {
-    if (!cameraRef.current) return;
+    if (!cameraRef.current || aferindo) return;
 
+    setAferindo(true);
     try {
+      // Confirma uma leitura nova imediatamente antes da fotografia. Não usa
+      // coordenada antiga nem estimativa ampla de Wi-Fi/rede celular.
+      const posicao = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.BestForNavigation,
+        mayShowUserSettingsDialog: true,
+      });
+      guardarLocalizacao(posicao);
+
+      const avaliacao = avaliarLocalizacao({
+        ...posicao.coords,
+        timestamp: posicao.timestamp,
+      });
+      if (!avaliacao.aceita) {
+        Alert.alert(
+          'Aguardando GPS preciso',
+          `A margem atual é de aproximadamente ±${Math.round(
+            posicao.coords.accuracy || 0
+          )} m. Para registrar o ponto correto, aguarde em local aberto até chegar a ±${PRECISAO_MAXIMA_METROS} m.`
+        );
+        return;
+      }
+
       const resultado = await cameraRef.current.takePictureAsync({
         quality: 0.7, // menor upload, qualidade suficiente para identificar lixo
       });
+      pararRastreamento();
       setFoto(resultado);
-
-      // Se a leitura inicial falhou, tenta de novo agora.
-      if (!local) tentarLocalizacaoNovamente();
     } catch {
       Alert.alert('Erro', 'Não consegui tirar a foto. Tente novamente.');
+    } finally {
+      setAferindo(false);
     }
   }
 
   async function tentarLocalizacaoNovamente() {
     setErroLocal('');
     try {
+      await iniciarRastreamento();
       const posicao = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
+        accuracy: Location.Accuracy.BestForNavigation,
       });
-      setLocal(posicao.coords);
+      guardarLocalizacao(posicao);
     } catch {
       setErroLocal('Não consegui obter sua localização');
     }
@@ -109,6 +168,13 @@ export default function CameraScreen({ navigation }) {
       Alert.alert(
         'Sem localização',
         'A denúncia precisa da coordenada para aparecer no mapa. Ative o GPS e toque em "Tentar novamente".'
+      );
+      return;
+    }
+    if (!avaliarLocalizacao(local, local.timestamp).aceita) {
+      Alert.alert(
+        'Localização imprecisa',
+        `A denúncia exige uma coordenada com margem de até ${PRECISAO_MAXIMA_METROS} metros. Tire a foto novamente em local aberto.`
       );
       return;
     }
@@ -142,11 +208,21 @@ export default function CameraScreen({ navigation }) {
   }
 
   function reiniciar() {
+    pararRastreamento();
     setFoto(null);
     setTitulo('');
     setDescricao('');
     setCategoria('trash');
     navigation.navigate('Minhas denúncias');
+  }
+
+  function tirarOutraFoto() {
+    setFoto(null);
+    setLocal(null);
+    setErroLocal('Obtendo localização precisa...');
+    iniciarRastreamento().catch(() =>
+      setErroLocal('Não consegui atualizar sua localização')
+    );
   }
 
   // ---------- permissão ----------
@@ -186,16 +262,23 @@ export default function CameraScreen({ navigation }) {
         <View style={estilos.barraInferior}>
           <Text style={estilos.statusGps}>
             {local
-              ? `📍 Localização pronta (±${Math.round(local.accuracy || 0)}m)`
+              ? avaliarLocalizacao(local).aceita
+                ? `📍 GPS pronto (±${Math.round(local.accuracy)} m)`
+                : `⚠️ Aguardando GPS: ±${Math.round(local.accuracy || 0)} m (necessário ±${PRECISAO_MAXIMA_METROS} m)`
               : erroLocal || 'Obtendo localização...'}
           </Text>
 
           <TouchableOpacity
             style={estilos.disparador}
             onPress={tirarFoto}
+            disabled={aferindo}
             accessibilityLabel="Tirar foto"
           >
-            <View style={estilos.disparadorInterno} />
+            {aferindo ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <View style={estilos.disparadorInterno} />
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -212,7 +295,7 @@ export default function CameraScreen({ navigation }) {
       <ScrollView contentContainerStyle={estilos.formulario}>
         <Image source={{ uri: foto.uri }} style={estilos.previa} />
 
-        <TouchableOpacity onPress={() => setFoto(null)}>
+        <TouchableOpacity onPress={tirarOutraFoto}>
           <Text style={estilos.link}>Tirar outra foto</Text>
         </TouchableOpacity>
 
@@ -220,6 +303,7 @@ export default function CameraScreen({ navigation }) {
           {local ? (
             <Text style={estilos.localTexto}>
               📍 {local.latitude.toFixed(5)}, {local.longitude.toFixed(5)}
+              {'\n'}Precisão confirmada: ±{Math.round(local.accuracy)} m
             </Text>
           ) : (
             <>
