@@ -107,8 +107,10 @@ aguardando análise. Detalhes em
 | Mapa no web, com calor e estatísticas | ✅ pronto   |
 | Mapa no app, com denúncias próximas | ✅ pronto   |
 | Busca por proximidade (raio)     | ✅ pronto   |
+| Precisão do GPS registrada e exibida | ✅ pronto   |
 | Moderação com trilha de auditoria | ✅ pronto   |
-| Integração com órgãos públicos   | ⏳ Fase 4   |
+| Votos e comentários              | ⏳ planejado |
+| Integração com órgãos públicos   | ⏳ planejado |
 
 ## Variáveis de ambiente
 

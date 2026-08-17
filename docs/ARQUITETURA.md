@@ -1,7 +1,7 @@
 # Arquitetura
 
-> Estado: **MVP em construção** (Semana 1 de 12). Este documento descreve o
-> desenho alvo e marca claramente o que já existe e o que ainda é plano.
+> Estado: **em produção desde 16/08/2026.** Este documento marca com ✅ o
+> que existe e com ⏳ o que ainda é plano.
 
 ## Visão geral
 
@@ -225,14 +225,24 @@ Mobile                    API                     Banco
   │◄──── 201 { id, ... } ──┤                        │
 ```
 
+## Decisões já tomadas
+
+- **Armazenamento de imagens** — resolvido com drivers: disco local em
+  desenvolvimento, Cloudflare R2 em produção. Ver DECISOES #018.
+- **Moderação** — manual, com fila e trilha de auditoria. Ver DECISOES
+  #016 e #017.
+
 ## Decisões em aberto
 
-- **Armazenamento de imagens** — S3 está previsto no `.env` mas sem credenciais.
-  Para o MVP, avaliar salvar em disco local ou usar um bucket gratuito.
-- **Moderação** — manual (fila para moderadores) ou automática (classificador de
-  imagem)? Impacta a Fase 3.
 - **Integração com órgãos públicos** — cada município tem API própria ou
-  nenhuma. Provável fallback: exportação CSV / e-mail.
+  nenhuma. Provável fallback: exportação CSV ou e-mail. Depende de saber
+  qual prefeitura é o alvo inicial.
+- **Priorização por confirmação** — vários cidadãos denunciando o mesmo
+  ponto deveria elevar a prioridade? Exigiria agrupar denúncias próximas,
+  e o critério de "mesmo ponto" não é óbvio: 10 m? 50 m? Depende da
+  precisão de cada uma, que agora é registrada.
+- **Retenção de fotos** — denúncias resolvidas há anos precisam manter a
+  imagem? Afeta custo de armazenamento e privacidade.
 
 ## Ver também
 
