@@ -6,6 +6,7 @@
 | [ARQUITETURA.md](ARQUITETURA.md)     | Como o sistema é organizado e o modelo de dados                 |
 | [API.md](API.md)                     | Contrato dos endpoints (o que existe e o que está planejado)    |
 | [DEPLOY.md](DEPLOY.md)               | Publicar, atualizar e restaurar backup                          |
+| [ACESSOS.md](ACESSOS.md)             | Quem controla o quê, riscos e como transferir o projeto         |
 | [MARCA.md](MARCA.md)                 | Paleta, ícones e regras de uso da identidade visual             |
 | [DECISOES.md](DECISOES.md)           | Por que a stack é essa — decisões e seus custos                 |
 | [CONTRIBUINDO.md](CONTRIBUINDO.md)   | Padrões de commit, código e segurança                           |
@@ -24,6 +25,9 @@ correspondente da [API.md](API.md).
 **Vai mexer em produção** → [DEPLOY.md](DEPLOY.md).
 
 **Quer entender uma escolha estranha** → [DECISOES.md](DECISOES.md).
+
+**Vai assumir o projeto** → [ACESSOS.md](ACESSOS.md), seção "Assumindo o
+projeto". Sem os acessos listados ali, nenhum outro documento adianta.
 
 ## Estado atual
 
@@ -46,8 +50,11 @@ banco automatizado às 3h.
 
 | Item                          | Onde                        |
 | ----------------------------- | --------------------------- |
-| App não está na Play Store    | build gerada, não publicada |
+| **Keystore do app só na conta Expo** | ACESSOS.md — item sem volta se perdido |
+| **Uma pessoa controla todos os acessos** | ACESSOS.md          |
+| Backups do banco ficam no próprio servidor | ACESSOS.md        |
 | Restauração de backup nunca testada | DEPLOY.md              |
+| App não está na Play Store    | build gerada, não publicada |
 | Rate limit em memória         | DECISOES #008               |
 | Fotos antigas em disco local não migradas | DECISOES #018   |
 
