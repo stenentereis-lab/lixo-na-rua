@@ -97,6 +97,15 @@ async function request(path, { method = 'GET', body, auth = false } = {}) {
 
 export const api = {
   betaSignup: (dados) => request('/beta-signups', { method: 'POST', body: dados }),
+  listarInscricoesBeta: (filtros = {}) => {
+    const qs = new URLSearchParams(
+      Object.entries(filtros).filter(([, value]) => value)
+    ).toString();
+    return request(`/beta-signups${qs ? `?${qs}` : ''}`, { auth: true });
+  },
+  atualizarInscricaoBeta: (id, status) => request(`/beta-signups/${id}/status`, {
+    method: 'PATCH', body: { status }, auth: true,
+  }),
   health: () => request('/health'),
 
   /**

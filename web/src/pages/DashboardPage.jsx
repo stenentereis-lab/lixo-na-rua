@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import MapaPage from './MapaPage';
 import ModeracaoPage from './ModeracaoPage';
+import BetaAdminPage from './BetaAdminPage';
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
@@ -13,6 +14,7 @@ export default function DashboardPage() {
   // A aba some para quem não pode moderar. Isso é conveniência de
   // interface: o backend valida o papel de novo em cada requisição.
   const podeModerar = user.role === 'moderator' || user.role === 'admin';
+  const ehAdmin = user.role === 'admin';
 
   return (
     <div className="app-wrap">
@@ -41,6 +43,14 @@ export default function DashboardPage() {
             Moderação
           </button>
         )}
+        {ehAdmin && (
+          <button
+            className={aba === 'inscricoes-beta' ? 'ativa' : ''}
+            onClick={() => setAba('inscricoes-beta')}
+          >
+            Inscrições beta
+          </button>
+        )}
         <button
           className={aba === 'conta' ? 'ativa' : ''}
           onClick={() => setAba('conta')}
@@ -51,6 +61,7 @@ export default function DashboardPage() {
 
       {aba === 'mapa' && <MapaPage />}
       {aba === 'moderacao' && podeModerar && <ModeracaoPage />}
+      {aba === 'inscricoes-beta' && ehAdmin && <BetaAdminPage />}
       {aba === 'conta' && (
         <section className="card">
           <h2>Sua conta</h2>

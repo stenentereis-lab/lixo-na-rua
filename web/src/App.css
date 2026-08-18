@@ -572,6 +572,23 @@
   font-weight: 400;
 }
 
+/* ---------- inscrições beta (admin) ---------- */
+.btn-recarregar { width: auto; padding: 9px 16px; }
+.beta-resumo { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin: 18px 0; }
+.beta-resumo div { padding: 13px; border-radius: 10px; background: #f1f5f9; text-align: center; }
+.beta-resumo strong, .beta-resumo span { display: block; }
+.beta-resumo strong { color: #14532d; font-size: 1.45rem; }
+.beta-resumo span { color: #64748b; font-size: .75rem; margin-top: 3px; }
+.beta-filtros { display: grid; grid-template-columns: minmax(220px, 1fr) 180px 100px; gap: 10px; margin-bottom: 18px; }
+.beta-filtros input, .beta-filtros select, .beta-tabela select { padding: 9px 11px; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; color: #334155; }
+.beta-tabela-wrap { overflow-x: auto; }
+.beta-tabela { width: 100%; border-collapse: collapse; font-size: .86rem; }
+.beta-tabela th { color: #64748b; font-size: .75rem; text-align: left; text-transform: uppercase; letter-spacing: .03em; }
+.beta-tabela th, .beta-tabela td { padding: 12px 10px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+.beta-tabela td strong, .beta-tabela td a, .beta-tabela td small { display: block; }
+.beta-tabela td a { color: #3d7a16; margin-top: 3px; }
+.beta-tabela td small { color: #64748b; margin-top: 3px; }
+
 /* ---------- responsivo ---------- */
 
 /* A arte some antes do formulário apertar: numa tela estreita ela
@@ -591,6 +608,8 @@
     grid-template-columns: 1fr;
     gap: 20px;
   }
+  .beta-resumo { grid-template-columns: repeat(2, 1fr); }
+  .beta-filtros { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 600px) {

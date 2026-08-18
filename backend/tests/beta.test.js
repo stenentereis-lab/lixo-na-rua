@@ -5,6 +5,7 @@ const request = require('supertest');
 const mockDb = require('./helpers/testDb').createTestDb();
 jest.mock('../src/db', () => mockDb);
 const app = require('../src/app');
+const { generateToken } = require('../src/middleware/auth');
 
 const VALID = {
   nome: 'Ana Testadora',
@@ -46,5 +47,33 @@ describe('POST /beta-signups', () => {
     await request(app).post('/beta-signups').send(VALID);
     const res = await request(app).post('/beta-signups').send(VALID);
     expect(res.status).toBe(409);
+  });
+});
+
+describe('administração das inscrições beta', () => {
+  const adminToken = generateToken({ id: '00000000-0000-0000-0000-000000000001', role: 'admin' });
+  const userToken = generateToken({ id: '00000000-0000-0000-0000-000000000002', role: 'user' });
+
+  it('permite que somente admin liste inscritos e veja o resumo', async () => {
+    await request(app).post('/beta-signups').send(VALID);
+    expect((await request(app).get('/beta-signups')).status).toBe(401);
+    expect((await request(app).get('/beta-signups').set('Authorization', `Bearer ${userToken}`)).status).toBe(403);
+
+    const res = await request(app).get('/beta-signups').set('Authorization', `Bearer ${adminToken}`);
+    expect(res.status).toBe(200);
+    expect(res.body.data).toHaveLength(1);
+    expect(res.body.data[0].email).toBe(VALID.email);
+    expect(res.body.summary).toMatchObject({ total: 1, pending: 1 });
+  });
+
+  it('permite que admin atualize a situação', async () => {
+    await request(app).post('/beta-signups').send(VALID);
+    const { rows } = await mockDb.query('SELECT id FROM beta_signups');
+    const res = await request(app)
+      .patch(`/beta-signups/${rows[0].id}/status`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ status: 'accepted' });
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('accepted');
   });
 });

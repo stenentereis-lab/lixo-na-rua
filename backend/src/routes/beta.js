@@ -3,11 +3,13 @@ const express = require('express');
 const db = require('../db');
 const { ApiError, asyncHandler } = require('../utils/errors');
 const { rateLimit } = require('../middleware/rateLimit');
+const { requireAuth, requireRole } = require('../middleware/auth');
 const { normalizeEmail } = require('../utils/validators');
 
 const router = express.Router();
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const UF = /^[A-Z]{2}$/;
+const STATUSES = ['pending', 'invited', 'accepted', 'declined', 'removed'];
 
 function text(value, max = 120) {
   const result = String(value || '').trim();
@@ -58,6 +60,66 @@ router.post(
     }
 
     res.status(201).json({ message: 'Inscrição recebida com sucesso' });
+  })
+);
+
+router.get(
+  '/',
+  requireAuth,
+  requireRole('admin'),
+  asyncHandler(async (req, res) => {
+    const status = text(req.query.status, 20);
+    const search = text(req.query.search, 120);
+    const conditions = [];
+    const params = [];
+
+    if (status) {
+      if (!STATUSES.includes(status)) throw new ApiError(400, 'Situação inválida');
+      params.push(status);
+      conditions.push(`status = $${params.length}`);
+    }
+    if (search) {
+      params.push(`%${search}%`);
+      conditions.push(`(nome ILIKE $${params.length} OR email ILIKE $${params.length}
+        OR cidade ILIKE $${params.length} OR aparelho ILIKE $${params.length})`);
+    }
+
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const [{ rows: data }, { rows: counts }] = await Promise.all([
+      db.query(
+        `SELECT id, nome, email, cidade, uf, aparelho, android_version,
+                status, created_at
+           FROM beta_signups ${where}
+          ORDER BY created_at DESC
+          LIMIT 500`,
+        params
+      ),
+      db.query('SELECT status, COUNT(*)::int AS total FROM beta_signups GROUP BY status'),
+    ]);
+
+    const summary = Object.fromEntries(STATUSES.map((item) => [item, 0]));
+    for (const row of counts) summary[row.status] = Number(row.total);
+    summary.total = Object.values(summary).reduce((sum, value) => sum + value, 0);
+
+    res.json({ data, summary });
+  })
+);
+
+router.patch(
+  '/:id/status',
+  requireAuth,
+  requireRole('admin'),
+  asyncHandler(async (req, res) => {
+    const status = text(req.body.status, 20);
+    if (!STATUSES.includes(status)) throw new ApiError(400, 'Situação inválida');
+
+    const { rows } = await db.query(
+      `UPDATE beta_signups SET status = $1 WHERE id = $2
+       RETURNING id, nome, email, cidade, uf, aparelho, android_version, status, created_at`,
+      [status, req.params.id]
+    );
+    if (!rows[0]) throw new ApiError(404, 'Inscrição não encontrada');
+    res.json(rows[0]);
   })
 );
 
