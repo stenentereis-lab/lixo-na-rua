@@ -93,7 +93,8 @@ Saia e entre de novo no app para o token refletir o novo papel — ele viaja
 dentro do token, que já foi emitido.
 
 A aba **Moderação** passa a aparecer no web, com a fila de denúncias
-aguardando análise. Detalhes em
+aguardando análise. Administradores também veem **Inscrições beta**, com
+totais, busca, dados dos aparelhos e gestão da situação dos participantes. Detalhes em
 [docs/API.md](docs/API.md#papéis-de-usuário).
 
 ## Funcionalidades
@@ -109,6 +110,7 @@ aguardando análise. Detalhes em
 | Busca por proximidade (raio)     | ✅ pronto   |
 | Precisão do GPS registrada e exibida | ✅ pronto   |
 | Moderação com trilha de auditoria | ✅ pronto   |
+| Programa beta com inscrição, APK imediato e painel admin | ✅ pronto |
 | Votos e comentários              | ⏳ planejado |
 | Integração com órgãos públicos   | ⏳ planejado |
 
@@ -123,6 +125,7 @@ copy web\.env.example web\.env
 
 - `backend/.env` — conexão com o banco, `JWT_SECRET`, `CORS_ORIGIN`
 - `web/.env` — `VITE_API_URL` (padrão `http://localhost:3000`)
+- `VITE_BETA_APK_URL` — opcional; URL oficial do APK exibida após a inscrição
 
 Variáveis do frontend precisam do prefixo `VITE_` para o Vite expor ao browser —
 e por isso mesmo **nunca coloque segredo lá**, tudo vai para o bundle público.
@@ -150,7 +153,6 @@ e por isso mesmo **nunca coloque segredo lá**, tudo vai para o bundle público.
 │   └── src/
 │       ├── main.jsx  # bootstrap do React
 │       └── App.jsx
-├── admin/            # Painel administrativo
 ├── docs/             # Documentação
 └── docker-compose.yml
 ```

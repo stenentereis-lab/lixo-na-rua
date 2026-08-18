@@ -35,7 +35,7 @@ router.post(
     if (!EMAIL.test(data.email)) errors.email = 'E-mail inválido';
     if (!UF.test(data.uf)) errors.uf = 'Informe a UF com duas letras';
     if (req.body.age_confirmed !== true) errors.age_confirmed = 'Confirme que tem 18 anos ou mais';
-    if (req.body.beta_terms_version !== '1.0' || req.body.accepted_beta_terms !== true) {
+    if (req.body.beta_terms_version !== '1.1' || req.body.accepted_beta_terms !== true) {
       errors.accepted_beta_terms = 'Aceite o Termo do Programa Beta';
     }
     if (req.body.privacy_version !== '1.0' || req.body.acknowledged_privacy !== true) {
@@ -50,7 +50,7 @@ router.post(
            terms_version, privacy_version)
          VALUES ($1,$2,$3,$4,$5,$6,true,$7,$8)`,
         [data.nome, data.email, data.cidade, data.uf, data.aparelho,
-          data.android_version, '1.0', '1.0']
+          data.android_version, '1.1', '1.0']
       );
     } catch (err) {
       if (err.code === '23505' || /unique/i.test(err.message || '')) {

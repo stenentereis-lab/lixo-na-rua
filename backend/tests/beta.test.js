@@ -16,7 +16,7 @@ const VALID = {
   android_version: '14',
   age_confirmed: true,
   accepted_beta_terms: true,
-  beta_terms_version: '1.0',
+  beta_terms_version: '1.1',
   acknowledged_privacy: true,
   privacy_version: '1.0',
 };

@@ -10,6 +10,8 @@
 | [MARCA.md](MARCA.md)                 | Paleta, ícones e regras de uso da identidade visual             |
 | [DECISOES.md](DECISOES.md)           | Por que a stack é essa — decisões e seus custos                 |
 | [CONTRIBUINDO.md](CONTRIBUINDO.md)   | Padrões de commit, código e segurança                           |
+| [BETA.md](BETA.md)                   | Operação do programa comunitário de testes                   |
+| [legal/TERMO_DE_TESTADOR_BETA.md](legal/TERMO_DE_TESTADOR_BETA.md) | Termo vigente do programa beta |
 | [legal/TERMOS_DE_USO.md](legal/TERMOS_DE_USO.md) | Minuta dos Termos de Uso                         |
 | [legal/POLITICA_DE_PRIVACIDADE.md](legal/POLITICA_DE_PRIVACIDADE.md) | Minuta de privacidade            |
 | [legal/POLITICA_DE_MODERACAO.md](legal/POLITICA_DE_MODERACAO.md) | Minuta de moderação e retirada       |
@@ -45,9 +47,10 @@ projeto". Sem os acessos listados ali, nenhum outro documento adianta.
 
 O ciclo completo funciona e foi exercitado em produção: cadastro, captura
 de foto com GPS pelo app instalado, envio para o R2, mapa público com
-filtros e estatísticas, e moderação com trilha de auditoria.
+filtros e estatísticas, moderação com trilha de auditoria e programa beta
+com inscrição, download imediato do APK e painel administrativo.
 
-134 testes unitários mais 14 de integração contra PostGIS real. Backup do
+143 testes unitários mais 14 de integração contra PostGIS real. Backup do
 banco automatizado às 3h.
 
 ### Pendências conhecidas
@@ -78,4 +81,4 @@ Nenhum apareceria em teste automatizado, onde o servidor sempre responde
 rápido e não existe recorte de tela. Teste automatizado impede regressão;
 uso real encontra o que quebra na mão de quem usa. São coisas diferentes.
 
-Última atualização: 17/08/2026.
+Última atualização: 18/08/2026.

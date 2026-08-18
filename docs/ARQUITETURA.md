@@ -136,8 +136,9 @@ PostgreSQL 15 com extensão PostGIS 3.3, via Docker Compose.
 
 ## Modelo de dados
 
-As migrations `001` a `004` implementam `users`, `complaints`, `moderations`,
-a geometria PostGIS e a precisão do GPS. As tabelas marcadas como planejadas
+As migrations `001` a `006` implementam `users`, `complaints`, `moderations`,
+aceites legais, a geometria PostGIS, a precisão do GPS e `beta_signups`.
+As tabelas marcadas como planejadas
 abaixo ainda não existem:
 
 ```
@@ -181,6 +182,20 @@ moderations                             -- ✅ criada na migration 003
   status_depois  text
   motivo         text
   created_at     timestamptz
+
+beta_signups                            -- ✅ criada na migration 006
+  id              uuid PK
+  nome            text
+  email           text unique
+  cidade          text
+  uf              text
+  aparelho        text
+  android_version text
+  age_confirmed   boolean
+  terms_version   text
+  privacy_version text
+  status          text  -- pending | invited | accepted | declined | removed
+  created_at      timestamptz
 
 government_agencies                     -- planejada
   id, nome, municipio, api_endpoint, api_key
@@ -226,6 +241,27 @@ Mobile                    API                     Banco
   │                        ├─ INSERT + ST_MakePoint►│
   │◄──── 201 { id, ... } ──┤                        │
 ```
+
+## Fluxo do programa beta
+
+```
+Página /beta          API de produção       Banco principal
+     │                       │                    │
+     ├─ POST /beta-signups ─────►│                    │
+     │                       ├─ INSERT beta_signups ►│
+     │◄───── 201 ─────────────────│                    │
+     └─ exibe botão do APK
+
+Painel autenticado    API de produção       beta_signups
+     │                       │                    │
+     ├─ GET /beta-signups ─────►│─ valida JWT/admin ─►│
+     │◄── lista + totais ───────────────│                    │
+     └─ PATCH status ────────────────►│─ UPDATE ───────────►│
+```
+
+Os dados cadastrais ficam no banco principal para o painel administrativo. O
+APK beta aponta para `api-teste-lixo.brconsultorias.com`, cujo backend usa o
+banco `lixo_na_rua_beta` e armazenamento separado para as fotos de teste.
 
 ## Decisões já tomadas
 

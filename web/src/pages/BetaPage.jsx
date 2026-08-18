@@ -20,7 +20,7 @@ export default function BetaPage() {
     event.preventDefault(); setError(''); setLoading(true);
     try {
       await api.betaSignup({ ...form, age_confirmed: age, accepted_beta_terms: terms,
-        beta_terms_version: '1.0', acknowledged_privacy: privacy, privacy_version: '1.0' });
+        beta_terms_version: '1.1', acknowledged_privacy: privacy, privacy_version: '1.0' });
       setDone(true);
     } catch (err) { setError(err.message); }
     finally { setLoading(false); }

@@ -10,7 +10,7 @@
 
 ## Roteiro do participante
 
-1. instalar somente pelo link oficial recebido;
+1. preencher a inscrição em `/beta` e baixar o APK pelo botão exibido após a confirmação;
 2. confirmar que a faixa “VERSÃO DE TESTE” aparece;
 3. criar conta e ler os documentos;
 4. fotografar um objeto seguro usado apenas para simulação;
@@ -27,9 +27,18 @@ Vulnerabilidade de segurança deve ser comunicada em particular.
 
 ## Operação
 
-- inscrições: página `/beta`;
+- inscrições: página `/beta`, com liberação imediata do APK após o cadastro;
+- gestão: aba **Inscrições beta**, visível apenas para contas `admin`;
+- dados cadastrais: tabela `beta_signups` do banco principal, separada de usuários e ocorrências;
 - suporte e privacidade: `regiolireis@gmail.com`;
-- ambiente beta: banco e volume de fotos descartáveis;
-- produção: não recebe dados do programa;
+- uso do aplicativo beta: banco `lixo_na_rua_beta` e volume de fotos descartáveis;
+- produção: recebe somente a inscrição administrativa; contas, fotos e ocorrências de teste permanecem no ambiente beta;
 - ao final: exportar feedback anonimizado e eliminar inscrições não necessárias.
 
+## Fluxo administrativo
+
+1. o formulário grava a inscrição com situação `pending`;
+2. a confirmação libera o link oficial do APK imediatamente;
+3. o administrador acompanha totais, dados do aparelho e data de cadastro no painel;
+4. a situação pode ser atualizada para `invited`, `accepted`, `declined` ou `removed`;
+5. a lista não é pública e a API exige autenticação com papel `admin`.

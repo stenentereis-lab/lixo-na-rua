@@ -77,8 +77,9 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod \
   exec backend npm run set-role -- pessoa@exemplo.com moderator
 ```
 
-`moderator` muda status de denúncias. `admin` faz isso e remove qualquer
-uma. Ver [API.md](API.md#papéis-de-usuário).
+`moderator` muda status de denúncias. `admin` faz isso, remove qualquer
+denúncia e acessa os dados pessoais e a gestão das inscrições beta. Ver
+[API.md](API.md#papéis-de-usuário).
 
 ## Riscos de concentração
 
@@ -168,4 +169,4 @@ Atualize quando: mudar de provedor, adicionar pessoa com acesso, criar
 credencial nova, ou quando alguém sair do projeto — **revogando o acesso
 dessa pessoa**, o que é fácil de esquecer.
 
-Última atualização: 17/08/2026.
+Última atualização: 18/08/2026.

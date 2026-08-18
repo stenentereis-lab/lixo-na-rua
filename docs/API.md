@@ -228,6 +228,75 @@ de novo para a mudança valer.
 
 ---
 
+### `POST /beta-signups`
+
+Registra um interessado no programa comunitário. Pública, limitada a cinco
+tentativas por IP a cada hora. O e-mail é único.
+
+```json
+{
+  "nome": "Ana Testadora",
+  "email": "ana@example.com",
+  "cidade": "Campo Grande",
+  "uf": "MS",
+  "aparelho": "Samsung Galaxy A54",
+  "android_version": "14",
+  "age_confirmed": true,
+  "accepted_beta_terms": true,
+  "beta_terms_version": "1.1",
+  "acknowledged_privacy": true,
+  "privacy_version": "1.0"
+}
+```
+
+**201** `{ "message": "Inscrição recebida com sucesso" }` · **400** validação
+· **409** e-mail já inscrito · **429** excesso de tentativas. O frontend só
+apresenta o link do APK depois desta resposta de sucesso.
+
+---
+
+### `GET /beta-signups` 🔒 admin
+
+Lista até 500 inscrições, da mais recente para a mais antiga, e devolve totais
+globais por situação.
+
+| Query | Descrição |
+| ----- | --------- |
+| `status` | `pending`, `invited`, `accepted`, `declined` ou `removed` |
+| `search` | busca parcial por nome, e-mail, cidade ou aparelho |
+
+```json
+{
+  "data": [{
+    "id": "uuid", "nome": "Ana Testadora", "email": "ana@example.com",
+    "cidade": "Campo Grande", "uf": "MS", "aparelho": "Galaxy A54",
+    "android_version": "14", "status": "pending",
+    "created_at": "2026-08-18T12:00:00.000Z"
+  }],
+  "summary": {
+    "pending": 1, "invited": 0, "accepted": 0,
+    "declined": 0, "removed": 0, "total": 1
+  }
+}
+```
+
+**401** sem autenticação · **403** perfil diferente de `admin`.
+
+---
+
+### `PATCH /beta-signups/:id/status` 🔒 admin
+
+Atualiza a situação administrativa da inscrição.
+
+```json
+{ "status": "accepted" }
+```
+
+**200** inscrição atualizada · **400** situação inválida · **401/403** acesso
+negado · **404** inscrição inexistente.
+
+---
+
 ### `POST /uploads` 🔒
 
 Envia uma imagem e devolve a URL. `multipart/form-data`, campo `image`.

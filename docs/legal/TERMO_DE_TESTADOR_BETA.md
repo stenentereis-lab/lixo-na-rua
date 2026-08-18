@@ -1,6 +1,6 @@
 # Termo de Participação no Programa Beta — Lixo na Rua
 
-> Versão 1.0 · Vigente para inscrições realizadas a partir de 17/08/2026
+> Versão 1.1 · Vigente para inscrições realizadas a partir de 18/08/2026
 
 ## 1. Programa
 
@@ -27,26 +27,32 @@ residências.
 
 Na inscrição são solicitados nome, e-mail, cidade/UF, modelo do aparelho e versão do
 Android. Durante o uso, são tratados os dados descritos na Política de Privacidade,
-em ambiente beta separado. A finalidade é selecionar participantes, oferecer
-suporte, medir compatibilidade, corrigir falhas e avaliar a experiência.
+Os dados da inscrição ficam em tabela administrativa própria no banco principal;
+contas, fotografias, coordenadas e relatos gerados durante o teste permanecem no
+ambiente beta separado. A finalidade é administrar o programa, oferecer suporte,
+medir compatibilidade, corrigir falhas e avaliar a experiência.
 
-Os dados da inscrição não serão vendidos. O participante pode desistir ou exercer
-seus direitos pelo e-mail informado acima. Inscrições não selecionadas serão
+O acesso aos dados da inscrição é restrito a administradores autenticados. Os dados
+não serão vendidos. O participante pode desistir ou exercer
+seus direitos pelo e-mail informado acima. Inscrições que não resultarem em participação ativa serão
 eliminadas após o encerramento do ciclo; dados técnicos necessários para documentar
 correções poderão ser anonimizados.
+
+Após o envio válido da inscrição, a página disponibiliza imediatamente o botão
+para baixar o APK beta. O cadastro não garante suporte individual nem continuidade
+do programa.
 
 ## 4. Confidencialidade e publicação
 
 O participante pode comentar que integra o teste, mas não deve publicar senhas,
-links de acesso restrito, dados de outros participantes ou informações que permitam
+dados de outros participantes ou informações que permitam
 explorar falhas de segurança. Vulnerabilidades devem ser comunicadas em particular.
 
 ## 5. Riscos e responsabilidade
 
 Software beta pode apresentar falhas, indisponibilidade, consumo adicional de
 bateria ou perda de dados experimentais. O participante deve manter o Android
-atualizado e instalar o APK apenas pelo link oficial recebido.
+atualizado e instalar o APK apenas pelo link oficial exibido na página de inscrição.
 
 Nada neste termo afasta direitos ou responsabilidades previstos na legislação
 brasileira.
-

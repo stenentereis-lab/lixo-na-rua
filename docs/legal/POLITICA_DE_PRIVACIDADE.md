@@ -20,6 +20,7 @@ Conforme o uso do aplicativo, podem ser tratados:
 | Categoria | Exemplos |
 | --- | --- |
 | Cadastro | nome, e-mail e senha armazenada de forma protegida por hash |
+| Inscrição beta | nome, e-mail, cidade/UF, aparelho, versão do Android, aceites e situação da participação |
 | Relato ambiental | fotografia, título, descrição, categoria e situação da moderação |
 | Localização | latitude, longitude e margem de precisão do aparelho |
 | Operação e segurança | datas, identificadores internos, registros de aceite e dados técnicos estritamente necessários à segurança |

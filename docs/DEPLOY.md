@@ -195,6 +195,14 @@ Trocar o segredo invalida as sessões existentes: todo mundo faz login de novo.
 | Domain    | `brconsultorias.com`  |
 | Service   | `http://backend:3000` |
 
+Para o aplicativo beta, adicione um segundo hostname no mesmo túnel:
+
+| Campo     | Valor                      |
+| --------- | -------------------------- |
+| Subdomain | `api-teste-lixo`           |
+| Domain    | `brconsultorias.com`       |
+| Service   | `http://backend-beta:3000` |
+
 > `backend` é o nome do serviço no compose, resolvido pela rede interna do
 > Docker. Não use `localhost` — dentro do container do túnel, `localhost` é
 > o próprio túnel.
@@ -210,8 +218,13 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 docker compose -f docker-compose.prod.yml --env-file .env.prod \
   exec backend npm run migrate
 
+# criar/atualizar as tabelas do banco isolado de testes
+docker compose -f docker-compose.prod.yml --env-file .env.prod \
+  exec backend-beta npm run migrate
+
 # conferir
 curl https://api-lixo.brconsultorias.com/health
+curl https://api-teste-lixo.brconsultorias.com/health
 ```
 
 Esperado: `{"status":"OK","database":"connected",...}`
@@ -239,7 +252,9 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod \
 | Build output directory | `dist`          |
 | Root directory         | `web`           |
 
-3. **Environment variables** → `VITE_API_URL` = `https://api-lixo.brconsultorias.com`
+3. **Environment variables**:
+   - `VITE_API_URL` = `https://api-lixo.brconsultorias.com`
+   - `VITE_BETA_APK_URL` = URL do APK beta oficial (opcional enquanto houver fallback no código)
 4. **Custom domains** → `lixonarua.brconsultorias.com`
 
 > ⚠️ Use o **subdomínio**, nunca `brconsultorias.com` sozinho. Apontar o
