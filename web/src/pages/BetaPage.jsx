@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { api } from '../services/api';
 
 const INITIAL = { nome: '', email: '', cidade: '', uf: '', aparelho: '', android_version: '' };
+const BETA_APK_URL = import.meta.env.VITE_BETA_APK_URL
+  || 'https://expo.dev/artifacts/eas/8eYUfGvqAlH5OjMy7D_hW4qnmxOew8sjiD1Y10othLM.apk';
 
 export default function BetaPage() {
   const [form, setForm] = useState(INITIAL);
@@ -25,7 +27,12 @@ export default function BetaPage() {
   }
 
   if (done) return <main className="beta-page"><section className="beta-hero card">
-    <h1>Inscrição recebida 🌱</h1><p>Obrigado! As pessoas selecionadas receberão as instruções por e-mail.</p>
+    <h1>Inscrição recebida 🌱</h1>
+    <p>Obrigado! Sua inscrição foi concluída e o aplicativo beta já está disponível para download.</p>
+    <a className="btn" href={BETA_APK_URL} target="_blank" rel="noreferrer">
+      Baixar o APK Beta para Android
+    </a>
+    <small>Ao instalar, o Android poderá pedir autorização para instalar aplicativos desta fonte.</small>
   </section></main>;
 
   return <main className="beta-page">
